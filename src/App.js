@@ -249,11 +249,10 @@ function WoodBoard({ board, selected, legalDests, onPointClick }) {
             pointerEvents:"none",
           }}>
             {Array.from({length:shown}).map((_,i)=>{
-              const checkerSize = "min(26px, calc(100% - 4px))";
               return (
                 <div key={i} style={{
                   width:"82%",
-                  aspectRatio:"1/1",
+                  aspectRatio:"1 / 1",
                   borderRadius:"50%",
                   flexShrink:0,
                   background: isW
@@ -398,7 +397,7 @@ function BestMoveReplay({ startBoard, moves }) {
       setStep(s=>s+1);
     },700);
     return()=>clearTimeout(t);
-  },[step]);
+  },[step, moves]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return <WoodBoard board={display} selected={null} legalDests={flashDests} onPointClick={()=>{}}/>;
 }
