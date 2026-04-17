@@ -194,7 +194,6 @@ function WoodBoard({ board, selected, legalDests, onPointClick }) {
     const val   = board[ptIdx]||0;
     const count = Math.abs(val);
     const isW   = val>0;
-    const isB   = val<0;
     const isSel = selected===ptIdx;
     const hl    = isHL(ptIdx);
     const hit   = isHit(ptIdx);
@@ -254,7 +253,7 @@ function WoodBoard({ board, selected, legalDests, onPointClick }) {
               return (
                 <div key={i} style={{
                   width:"82%",
-                  aspectRatio:"1",
+                  aspectRatio:"1/1",
                   borderRadius:"50%",
                   flexShrink:0,
                   background: isW
@@ -559,7 +558,7 @@ export default function SheshBesh() {
     setPhase("playing");
     setResultTab("yours");
   }
-  useEffect(()=>{ initPuzzle(PUZZLES[puzzleIdx%PUZZLES.length]); },[puzzleIdx]);
+  useEffect(()=>{ initPuzzle(PUZZLES[puzzleIdx%PUZZLES.length]); },[puzzleIdx]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handlePointClick(ptIdx) {
     if (phase!=="playing"||!liveBoard) return;
@@ -798,7 +797,7 @@ export default function SheshBesh() {
               background:allUsed?C.goldBtn:C.bgDeep,
               color:allUsed?"#FDF6E3":C.textSoft,
               fontSize:16,fontWeight:800,letterSpacing:3,fontFamily:"Georgia,serif",
-              border:allUsed?"none":`1px solid ${C.border}`,
+              outline:allUsed?"none":`1px solid ${C.border}`,
               boxShadow:allUsed?"0 4px 16px rgba(184,134,11,0.28)":"none",
               transition:"all 0.3s",
             }}>
