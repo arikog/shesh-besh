@@ -182,12 +182,13 @@ function Die({ value, size=46, used=false }) {
 
 // ── Board ─────────────────────────────────────────────────────────────────
 // Responsive: fills container width, points sized to fit
-function WoodBoard({ board, selected, legalDests, onPointClick }) {
+function WoodBoard({ board, selected, legalDests, onPointClick, onBearOff, borneOff=0 }) {
   // Top row: points 24→13 displayed left to right = indices 23→12
   // Bot row: points  1→12 displayed left to right = indices 0→11
   const topRow = [23,22,21,20,19,18, 17,16,15,14,13,12];
   const botRow = [0,  1, 2, 3, 4, 5,  6, 7, 8, 9,10,11];
 
+  const canBearOff = legalDests.some(d=>d.to===-1);
   const isHL = (idx) => legalDests.some(d=>d.to===idx);
   const isHit= (idx) => isHL(idx) && board[idx]===-1;
 
@@ -377,7 +378,56 @@ function WoodBoard({ board, selected, legalDests, onPointClick }) {
         <div style={{flex:1,textAlign:"center",color:"#1060B0",fontSize:7.5,fontWeight:800,letterSpacing:1.5}}>YOUR OUTER</div>
       </div>
 
-      <style>{`@keyframes triPulse{0%,100%{opacity:0.5}50%{opacity:1}}`}</style>
+
+      {/* Bear-off tray */}
+      <div
+        onClick={canBearOff && onBearOff ? onBearOff : undefined}
+        style={{
+          marginTop:8,
+          background: canBearOff
+            ? 'rgba(212,160,23,0.12)'
+            : 'rgba(44,26,10,0.06)',
+          border: canBearOff
+            ? '2px solid rgba(212,160,23,0.6)'
+            : '2px dashed rgba(44,26,10,0.2)',
+          borderRadius:10,
+          padding:'10px 14px',
+          display:'flex',
+          alignItems:'center',
+          gap:10,
+          cursor: canBearOff && onBearOff ? 'pointer' : 'default',
+          transition:'all 0.25s',
+          animation: canBearOff ? 'trayPulse 1.2s ease-in-out infinite' : 'none',
+        }}
+      >
+        {/* Checker stack showing borne-off pieces */}
+        <div style={{display:'flex',flexWrap:'wrap',gap:3,minWidth:80,minHeight:28}}>
+          {Array.from({length:Math.min(borneOff,15)}).map((_,i)=>(
+            <div key={i} style={{
+              width:20,height:20,borderRadius:'50%',
+              background:'radial-gradient(circle at 38% 30%,#FFFFFF 0%,#E8E8D8 35%,#B8B0A0 75%,#908880 100%)',
+              border:'1.5px solid #909080',
+              boxShadow:'0 1px 3px rgba(0,0,0,0.3)',
+            }}/>
+          ))}
+          {borneOff===0 && (
+            <div style={{color:'rgba(44,26,10,0.3)',fontSize:11,fontStyle:'italic',lineHeight:'28px'}}>no pieces yet</div>
+          )}
+        </div>
+        <div style={{flex:1,textAlign:'right'}}>
+          <div style={{
+            color: canBearOff ? '#B8860B' : 'rgba(44,26,10,0.4)',
+            fontSize:11,fontWeight:800,letterSpacing:1,
+          }}>
+            {canBearOff ? 'TAP TO BEAR OFF' : 'BORNE OFF'}
+          </div>
+          <div style={{
+            color: canBearOff ? '#B8860B' : 'rgba(44,26,10,0.5)',
+            fontSize:18,fontWeight:800,marginTop:2,
+          }}>{borneOff} / 15</div>
+        </div>
+      </div>
+      <style>{`@keyframes triPulse{0%,100%{opacity:0.5}50%{opacity:1}} @keyframes trayPulse{0%,100%{border-color:rgba(212,160,23,0.4)}50%{border-color:rgba(212,160,23,0.9)}}`}</style>
     </div>
   );
 }
@@ -387,13 +437,15 @@ function BestMoveReplay({ startBoard, moves }) {
   const [display,setDisplay]=useState([...startBoard]);
   const [step,setStep]=useState(0);
   const [flashDests,setFlashDests]=useState([]);
+  const [replayBorneOff,setReplayBorneOff]=useState(0);
 
-  useEffect(()=>{setDisplay([...startBoard]);setStep(0);setFlashDests([]);},[startBoard,moves]);
+  useEffect(()=>{setDisplay([...startBoard]);setStep(0);setFlashDests([]);setReplayBorneOff(0);},[startBoard,moves]);
 
   useEffect(()=>{
     if(step>=moves.length) return;
     setFlashDests([{to:moves[step].to}]);
     const t=setTimeout(()=>{
+      if(moves[step].to===-1) setReplayBorneOff(n=>n+1);
       setDisplay(b=>applyMove(b,moves[step].from,moves[step].to));
       setFlashDests([]);
       setStep(s=>s+1);
@@ -401,7 +453,7 @@ function BestMoveReplay({ startBoard, moves }) {
     return()=>clearTimeout(t);
   },[step, moves]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  return <WoodBoard board={display} selected={null} legalDests={flashDests} onPointClick={()=>{}}/>;
+  return <WoodBoard board={display} selected={null} legalDests={flashDests} onPointClick={()=>{}} borneOff={replayBorneOff}/>;
 }
 
 // ── Board Info Overlay ────────────────────────────────────────────────────
@@ -537,6 +589,7 @@ export default function SheshBesh() {
   const [selected,   setSelected  ] = useState(null);
   const [legalDests, setLegalDests] = useState([]);
   const [movesDone,  setMovesDone ] = useState([]);
+  const [borneOff,   setBorneOff  ] = useState(0);
   const [phase,      setPhase     ] = useState("playing");
   const [resultTab,  setResultTab ] = useState("yours");
   const [isCorrect,  setIsCorrect ] = useState(false);
@@ -556,6 +609,7 @@ export default function SheshBesh() {
     setSelected(null);
     setLegalDests([]);
     setMovesDone([]);
+    setBorneOff(0);
     setPhase("playing");
     setResultTab("yours");
   }
@@ -582,6 +636,22 @@ export default function SheshBesh() {
     }
     if (val>0) { setSelected(ptIdx); setLegalDests(getLegalDests(liveBoard,ptIdx,diceLeft)); return; }
     setSelected(null); setLegalDests([]);
+  }
+
+
+  function handleBearOff() {
+    if (phase !== 'playing' || !liveBoard || selected === null) return;
+    const hl = legalDests.find(d => d.to === -1);
+    if (!hl) return;
+    const nb = applyMove(liveBoard, selected, -1);
+    const nd = [...diceLeft];
+    nd.splice(nd.indexOf(hl.die), 1);
+    setLiveBoard(nb);
+    setDiceLeft(nd);
+    setMovesDone(m => [...m, { from: selected, to: -1 }]);
+    setBorneOff(n => n + 1);
+    setSelected(null);
+    setLegalDests([]);
   }
 
   function handleGo() {
@@ -765,7 +835,7 @@ export default function SheshBesh() {
         {/* Board */}
         <div style={{padding:"0 14px 10px"}}>
           {(phase==="playing"||phase==="analysing") && (
-            <WoodBoard board={liveBoard||puzzle.board} selected={selected} legalDests={legalDests} onPointClick={handlePointClick}/>
+            <WoodBoard board={liveBoard||puzzle.board} selected={selected} legalDests={legalDests} onPointClick={handlePointClick} onBearOff={handleBearOff} borneOff={borneOff}/>
           )}
           {phase==="result" && (
             <>
@@ -783,7 +853,7 @@ export default function SheshBesh() {
                 ))}
               </div>
               {resultTab==="yours"
-                ?<WoodBoard board={yourBoard} selected={null} legalDests={[]} onPointClick={()=>{}}/>
+                ?<WoodBoard board={yourBoard} selected={null} legalDests={[]} onPointClick={()=>{}} borneOff={borneOff}/>
                 :<BestMoveReplay startBoard={puzzle.board} moves={puzzle.bestMoves}/>
               }
             </>
