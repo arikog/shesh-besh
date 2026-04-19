@@ -49,7 +49,13 @@ const PUZZLES = [
   {
     id:1, difficulty:"Beginner", diffColor:C.green, concept:"Hitting a Blot",
     dice:[6,1],
-    board:(()=>{ const b=makeStd(); b[5]=4; b[6]=-1; return b; })(),
+    // white=15: 23×2,12×5,7×3,5×5 | black=15: 0×2,11×4,16×3,18×5,6×1(blot)
+    board:(()=>{
+      const b=new Array(24).fill(0);
+      b[23]=2; b[12]=5; b[7]=3; b[5]=5;
+      b[0]=-2; b[11]=-4; b[16]=-3; b[18]=-5; b[6]=-1;
+      return b;
+    })(),
     bestMoves:[{from:12,to:6},{from:7,to:6}],
     yourWinPct:48, bestWinPct:64,
     yourExplanation:"Moving without hitting lets your opponent escape freely.",
@@ -59,10 +65,11 @@ const PUZZLES = [
   {
     id:2, difficulty:"Intermediate", diffColor:"#E65100", concept:"Building a Prime",
     dice:[3,2],
+    // white=15: 23×2,12×4,7×3,5×2,4×1,3×1,2×1,1×1 | black=15: 0×2,11×5,16×3,18×5
     board:(()=>{
       const b=new Array(24).fill(0);
-      b[23]=2; b[12]=4; b[7]=3; b[5]=2; b[4]=1;
-      b[0]=-2; b[11]=-5; b[16]=-3; b[18]=-4;
+      b[23]=2; b[12]=4; b[7]=3; b[5]=2; b[4]=1; b[3]=1; b[2]=1; b[1]=1;
+      b[0]=-2; b[11]=-5; b[16]=-3; b[18]=-5;
       return b;
     })(),
     bestMoves:[{from:7,to:4},{from:5,to:3}],
@@ -74,13 +81,14 @@ const PUZZLES = [
   {
     id:3, difficulty:"Advanced", diffColor:C.red, concept:"Back Game Timing",
     dice:[4,4],
+    // white=15: 23×1,21×1,12×3,7×2,5×4,4×2,2×1,1×1 | black=15: 22×1,18×4,16×3,11×4,3×2,0×1
     board:(()=>{
       const b=new Array(24).fill(0);
-      b[23]=1; b[21]=1; b[12]=3; b[7]=4; b[5]=4;
-      b[1]=-2; b[3]=-1; b[11]=-4; b[16]=-3; b[18]=-4;
+      b[23]=1; b[21]=1; b[12]=3; b[7]=2; b[5]=4; b[4]=2; b[2]=1; b[1]=1;
+      b[22]=-1; b[18]=-4; b[16]=-3; b[11]=-4; b[3]=-2; b[0]=-1;
       return b;
     })(),
-    bestMoves:[{from:5,to:1},{from:5,to:1}],
+    bestMoves:[{from:5,to:1},{from:4,to:0}],
     yourWinPct:38, bestWinPct:55,
     yourExplanation:"Running too early destroys your back game timing — you need to stay back to shoot.",
     bestExplanation:"Holding your anchors preserves a 78% shot chance as your opponent bears off, lifting win probability from 38% to 55%.",
@@ -89,13 +97,14 @@ const PUZZLES = [
   {
     id:4, difficulty:"Beginner", diffColor:C.green, concept:"Bearing Off",
     dice:[5,3],
+    // white=15 all home: 5×3,4×3,3×3,2×3,1×2,0×1 | black=15: 23×3,22×3,21×3,20×3,19×3
     board:(()=>{
       const b=new Array(24).fill(0);
       b[5]=3; b[4]=3; b[3]=3; b[2]=3; b[1]=2; b[0]=1;
-      b[18]=-2; b[19]=-2; b[20]=-2; b[21]=-3; b[22]=-2;
+      b[23]=-3; b[22]=-3; b[21]=-3; b[20]=-3; b[19]=-3;
       return b;
     })(),
-    bestMoves:[{from:5,to:-1},{from:3,to:-1}],
+    bestMoves:[{from:4,to:-1},{from:2,to:-1}],
     yourWinPct:72, bestWinPct:81,
     yourExplanation:"Holding back any checker in a pure race unnecessarily reduces your pip lead.",
     bestExplanation:"Bearing off two checkers extends your pip lead by 16, pushing win probability from 72% to 81% — every checker off is worth ~1.5 pips.",
@@ -104,13 +113,14 @@ const PUZZLES = [
   {
     id:5, difficulty:"Intermediate", diffColor:"#E65100", concept:"Safe Point-Making",
     dice:[6,2],
+    // white=15: 23×2,12×5,10×1,7×2,6×1,5×2,4×1,1×1 | black=15: 0×2,11×4,16×3,18×5,22×1
     board:(()=>{
       const b=new Array(24).fill(0);
-      b[23]=2; b[12]=5; b[7]=2; b[5]=2; b[4]=1; b[6]=1;
+      b[23]=2; b[12]=5; b[10]=1; b[7]=2; b[6]=1; b[5]=2; b[4]=1; b[1]=1;
       b[0]=-2; b[11]=-4; b[16]=-3; b[18]=-5; b[22]=-1;
       return b;
     })(),
-    bestMoves:[{from:12,to:4},{from:6,to:4}],
+    bestMoves:[{from:10,to:4},{from:6,to:4}],
     yourWinPct:44, bestWinPct:61,
     yourExplanation:"Leaving a blot on the 5-point exposes you to a 42% chance of being hit.",
     bestExplanation:"Making the golden 5-point cleanly improves your win probability from 44% to 61% and creates an anchor your opponent cannot attack.",
@@ -130,13 +140,14 @@ function getLegalDests(board, fromPt, diceRemaining) {
   const uniqueDice=[...new Set(diceRemaining)];
   for (const die of uniqueDice) {
     const to=fromPt-die;
-    if (seen.has(to)) continue;
-    seen.add(to);
+    const key=to<0?'off':to;
+    if (seen.has(key)) continue;
+    seen.add(key);
     if (to<0) {
       if (!home) continue;
-      if (to===-die) { results.push({to:-1,die}); continue; }
+      const isExact=(fromPt-die)===-1;
       const highest=board.reduce((h,v,i)=>(v>0&&i>h?i:h),-1);
-      if (fromPt===highest) results.push({to:-1,die});
+      if (isExact||fromPt===highest) results.push({to:-1,die});
       continue;
     }
     if (board[to]<=-2) continue;
