@@ -33,16 +33,7 @@ const diceLabel = (d1,d2) => DICE_NAMES[`${Math.max(d1,d2)}-${Math.min(d1,d2)}`]
 // ── Standard starting position ────────────────────────────────────────────
 // Index 0 = point 1 (white home), index 23 = point 24 (black home)
 // White (+) moves from high→low indices. Bears off below index 0.
-// Standard: white on pts 24(idx23)×2, 13(idx12)×5, 8(idx7)×3, 6(idx5)×5
-//           black on pts  1(idx0)×2,  12(idx11)×5, 17(idx16)×3, 19(idx18)×5
-const makeStd = () => {
-  const b = new Array(24).fill(0);
-  // White
-  b[23]=2; b[12]=5; b[7]=3; b[5]=5;
-  // Black
-  b[0]=-2; b[11]=-5; b[16]=-3; b[18]=-5;
-  return b;
-};
+
 
 // ── Puzzles ───────────────────────────────────────────────────────────────
 const PUZZLES = [
