@@ -954,8 +954,6 @@ export default function SheshBesh() {
         )}
         </div>{/* end bottom sheet */}
       </div>{/* end max-width */}
-    </div>
-
       <style>{`
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
