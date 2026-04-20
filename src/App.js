@@ -51,7 +51,7 @@ const PUZZLES = [
     yourWinPct:48, bestWinPct:64,
     yourExplanation:"Moving without hitting lets your opponent escape freely.",
     bestExplanation:"Hitting on the 7-point sends your opponent to the bar where they face a 67% chance of failing to re-enter. Win probability jumps from 48% to 64%.",
-    description:"Your opponent left a blot on the 7-point. The dice are in your favour — what's the right play?",
+    description:"Opponent blot on the 7-point — do you hit?",
   },
   {
     id:2, difficulty:"Intermediate", diffColor:"#E65100", concept:"Building a Prime",
@@ -67,7 +67,7 @@ const PUZZLES = [
     yourWinPct:52, bestWinPct:71,
     yourExplanation:"Other moves leave your prime incomplete, giving your opponent a chance to slip through.",
     bestExplanation:"Extending to a 5-prime traps both opponent checkers with no escape on 94% of rolls, pushing win probability from 52% to 71%.",
-    description:"You're close to a 5-prime. Two opponent checkers are trapped. How do you seal the prison?",
+    description:"You're one move from a 5-prime — seal it.",
   },
   {
     id:3, difficulty:"Advanced", diffColor:C.red, concept:"Back Game Timing",
@@ -79,11 +79,11 @@ const PUZZLES = [
       b[22]=-1; b[18]=-4; b[16]=-3; b[11]=-4; b[3]=-2; b[0]=-1;
       return b;
     })(),
-    bestMoves:[{from:5,to:1},{from:4,to:0}],
+    bestMoves:[{from:5,to:1},{from:4,to:0},{from:12,to:8},{from:12,to:8}],
     yourWinPct:38, bestWinPct:55,
     yourExplanation:"Running too early destroys your back game timing — you need to stay back to shoot.",
     bestExplanation:"Holding your anchors preserves a 78% shot chance as your opponent bears off, lifting win probability from 38% to 55%.",
-    description:"You're playing a back game. Your timing is delicate — what move keeps your winning chances alive?",
+    description:"Back game position — protect your timing.",
   },
   {
     id:4, difficulty:"Beginner", diffColor:C.green, concept:"Bearing Off",
@@ -99,7 +99,7 @@ const PUZZLES = [
     yourWinPct:72, bestWinPct:81,
     yourExplanation:"Holding back any checker in a pure race unnecessarily reduces your pip lead.",
     bestExplanation:"Bearing off two checkers extends your pip lead by 16, pushing win probability from 72% to 81% — every checker off is worth ~1.5 pips.",
-    description:"Pure race — no contact left. You lead on pips. What's the most efficient bearoff?",
+    description:"Pure race, you're ahead — bear off efficiently.",
   },
   {
     id:5, difficulty:"Intermediate", diffColor:"#E65100", concept:"Safe Point-Making",
@@ -115,7 +115,7 @@ const PUZZLES = [
     yourWinPct:44, bestWinPct:61,
     yourExplanation:"Leaving a blot on the 5-point exposes you to a 42% chance of being hit.",
     bestExplanation:"Making the golden 5-point cleanly improves your win probability from 44% to 61% and creates an anchor your opponent cannot attack.",
-    description:"You can make the golden 5-point safely. Don't leave a blot — what's the clean play?",
+    description:"Make the golden 5-point without leaving a blot.",
   },
 ];
 
@@ -321,7 +321,7 @@ function WoodBoard({ board, selected, legalDests, onPointClick, onBearOff, borne
       }}>
 
         {/* ── TOP ROW ── */}
-        <div style={{display:"flex",height:140,flexShrink:0}}>
+        <div style={{display:"flex",height:175,flexShrink:0}}>
           {/* Left 6 points: indices 23-18 */}
           <div style={{flex:1,display:"flex",height:"100%",minWidth:0}}>
             {topRow.slice(0,6).map((ptIdx,ci)=>renderPoint(ptIdx,ci,true))}
@@ -352,7 +352,7 @@ function WoodBoard({ board, selected, legalDests, onPointClick, onBearOff, borne
         </div>
 
         {/* ── BOTTOM ROW ── */}
-        <div style={{display:"flex",height:140,flexShrink:0}}>
+        <div style={{display:"flex",height:175,flexShrink:0}}>
           {/* Left 6 points: indices 0-5 */}
           <div style={{flex:1,display:"flex",height:"100%",minWidth:0}}>
             {botRow.slice(0,6).map((ptIdx,ci)=>renderPoint(ptIdx,ci,false))}
@@ -749,91 +749,35 @@ export default function SheshBesh() {
 
   // ── PUZZLE ───────────────────────────────────────────────────────────────
   return(
-    <div style={{minHeight:"100vh",background:`linear-gradient(160deg,${C.bg},${C.bgDeep})`,fontFamily:"Georgia,serif",paddingBottom:48}}>
+    <div style={{minHeight:"100vh",background:"#8B4513",fontFamily:"Georgia,serif",display:"flex",flexDirection:"column"}}>
       {showPasha&&<PashaAlert onClose={()=>setShowPasha(false)}/>}
       {showInfo &&<BoardInfoOverlay onClose={()=>setShowInfo(false)}/>}
-      <div style={{maxWidth:480,margin:"0 auto"}}>
+      <div style={{maxWidth:520,margin:"0 auto",width:"100%",display:"flex",flexDirection:"column",minHeight:"100vh"}}>
 
-        {/* Header */}
-        <div style={{padding:"10px 14px",display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:`1px solid ${C.border}`,background:C.card,position:"sticky",top:0,zIndex:10,boxShadow:"0 2px 8px rgba(44,26,10,0.08)"}}>
-          <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",color:C.gold,fontSize:18,cursor:"pointer",padding:4}}>←</button>
-          <div style={{display:"flex",gap:14,alignItems:"center"}}>
-            {[{v:iq,l:"BG IQ",c:C.gold},{v:`${streak}🔥`,l:"STREAK",c:C.text},{v:`${accuracy}%`,l:"ACC",c:C.blue}].map((x,i)=>(
-              <div key={i} style={{display:"flex",alignItems:"center",gap:14}}>
-                {i>0&&<div style={{width:1,height:22,background:C.border}}/>}
-                <div style={{textAlign:"center"}}>
-                  <div style={{color:x.c,fontSize:15,fontWeight:800}}>{x.v}</div>
-                  <div style={{color:C.textSoft,fontSize:8,letterSpacing:1}}>{x.l}</div>
-                </div>
+        {/* ── Sticky header ── */}
+        <div style={{
+          padding:"8px 12px",
+          display:"flex",alignItems:"center",justifyContent:"space-between",
+          background:"rgba(44,20,4,0.95)",
+          flexShrink:0,
+          zIndex:10,
+        }}>
+          <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",color:"#E8C84A",fontSize:20,cursor:"pointer",padding:"4px 8px",borderRadius:6}}>←</button>
+          <div style={{display:"flex",alignItems:"center",gap:0,background:"rgba(255,255,255,0.08)",borderRadius:20,border:"1px solid rgba(232,200,74,0.25)",overflow:"hidden"}}>
+            {[{v:iq,l:"IQ",c:"#E8C84A"},{v:streak+"🔥",l:"STREAK",c:"#FDF6E3"},{v:accuracy+"%",l:"ACC",c:"#7EC8F0"}].map((x,i)=>(
+              <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 14px",borderRight:i<2?"1px solid rgba(232,200,74,0.2)":"none"}}>
+                <div style={{color:x.c,fontSize:13,fontWeight:800,lineHeight:1}}>{x.v}</div>
+                <div style={{color:"rgba(255,255,255,0.4)",fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
               </div>
             ))}
           </div>
-          <button onClick={()=>setShowInfo(true)} style={{width:30,height:30,borderRadius:"50%",background:C.bgDeep,border:`1px solid ${C.border}`,color:C.textMid,fontSize:14,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontStyle:"italic",fontFamily:"Georgia,serif",flexShrink:0}}>ℹ</button>
+          <button onClick={()=>setShowInfo(true)} style={{width:28,height:28,borderRadius:"50%",background:"rgba(255,255,255,0.08)",border:"1px solid rgba(232,200,74,0.25)",color:"rgba(232,200,74,0.7)",fontSize:13,fontWeight:800,cursor:"pointer",display:"flex",alignItems:"center",justifyContent:"center",fontStyle:"italic",fontFamily:"Georgia,serif",flexShrink:0}}>ℹ</button>
         </div>
 
-        {/* Meta */}
-        <div style={{padding:"10px 14px 4px",display:"flex",justifyContent:"space-between",alignItems:"center"}}>
-          <div style={{display:"flex",gap:8,alignItems:"center"}}>
-            <span style={{background:`${puzzle.diffColor}18`,color:puzzle.diffColor,fontSize:10,fontWeight:700,padding:"3px 9px",borderRadius:20,letterSpacing:1,border:`1px solid ${puzzle.diffColor}44`}}>{puzzle.difficulty.toUpperCase()}</span>
-            <span style={{color:C.textSoft,fontSize:12}}>{puzzle.concept}</span>
-          </div>
-          <span style={{color:C.textSoft,fontSize:12}}>#{puzzleIdx+1}</span>
-        </div>
-
-        {/* Description */}
-        <div style={{padding:"2px 14px 8px"}}>
-          <p style={{color:C.textMid,fontSize:13,lineHeight:1.55,margin:0}}>{puzzle.description}</p>
-        </div>
-
-        {/* Dice row */}
-        <div style={{padding:"0 14px 8px"}}>
-          <div style={{background:C.card,border:`1.5px solid ${C.border}`,borderRadius:12,padding:"10px 14px",display:"flex",alignItems:"center",gap:10,boxShadow:"0 2px 8px rgba(44,26,10,0.07)"}}>
-            {[puzzle.dice[0],puzzle.dice[1]].map((d,i)=>(
-              <Die key={i} value={d} size={44} used={i<movesDone.length&&puzzle.dice[0]!==puzzle.dice[1]}/>
-            ))}
-            <div style={{flex:1,paddingLeft:6}}>
-              <div style={{color:C.gold,fontSize:19,fontWeight:800}}>{label}</div>
-              <div style={{color:C.textSoft,fontSize:11,marginTop:1,fontStyle:"italic"}}>
-                {phase==="playing"
-                  ? diceLeft.length>0?`${diceLeft.length} move${diceLeft.length!==1?"s":""} remaining`:"All moves used"
-                  : phase==="analysing"?"Analysing...":""}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Turn / status indicator */}
-        {phase==="playing" && (
-          <div style={{padding:"0 14px 8px"}}>
-            <div style={{
-              background:"rgba(32,128,64,0.08)",
-              border:"1px solid rgba(32,128,64,0.28)",
-              borderRadius:10,padding:"8px 14px",
-              display:"flex",alignItems:"center",gap:10,
-            }}>
-              <div style={{width:10,height:10,borderRadius:"50%",background:"#208040",boxShadow:"0 0 7px #208040",animation:"blink 1.5s ease-in-out infinite",flexShrink:0}}/>
-              <span style={{color:"#208040",fontSize:12,fontWeight:700,letterSpacing:1}}>
-                {allUsed ? "READY — PRESS GO" : `WHITE TO PLAY · ${movesLeft} MOVE${movesLeft!==1?"S":""} LEFT`}
-              </span>
-              {/* White checker icon */}
-              <div style={{marginLeft:"auto",display:"flex",alignItems:"center",gap:6}}>
-                <div style={{width:18,height:18,borderRadius:"50%",background:"radial-gradient(circle at 38% 30%,#FFF,#C0B090)",border:"1.5px solid #A09070",flexShrink:0}}/>
-                <span style={{color:C.textSoft,fontSize:11,fontWeight:700}}>WHITE</span>
-              </div>
-            </div>
-          </div>
-        )}
-        {phase==="analysing" && (
-          <div style={{padding:"0 14px 8px"}}>
-            <div style={{background:"rgba(184,134,11,0.08)",border:"1px solid rgba(184,134,11,0.28)",borderRadius:10,padding:"8px 14px",display:"flex",alignItems:"center",gap:10}}>
-              <div style={{width:10,height:10,borderRadius:"50%",background:C.gold,boxShadow:`0 0 7px ${C.gold}`,animation:"blink 0.6s ease-in-out infinite",flexShrink:0}}/>
-              <span style={{color:C.gold,fontSize:12,fontWeight:700,letterSpacing:2}}>ANALYSING...</span>
-            </div>
-          </div>
-        )}
-
+        {/* ── Board — fills all available space ── */}
+        <div style={{flex:1,padding:"8px 8px 0",display:"flex",flexDirection:"column",justifyContent:"center"}}>
         {/* Board */}
-        <div style={{padding:"0 14px 10px"}}>
+        <div style={{padding:"0 2px 8px"}}>
           {(phase==="playing"||phase==="analysing") && (
             <WoodBoard board={liveBoard||puzzle.board} selected={selected} legalDests={legalDests} onPointClick={handlePointClick} onBearOff={handleBearOff} borneOff={borneOff}/>
           )}
@@ -859,6 +803,64 @@ export default function SheshBesh() {
             </>
           )}
         </div>
+
+        </div>{/* end board flex container */}
+
+        {/* ── Bottom sheet ── */}
+        <div style={{
+          background:"#FDF6E3",
+          borderTop:"3px solid #7A4020",
+          borderRadius:"16px 16px 0 0",
+          padding:"0 14px 24px",
+          flexShrink:0,
+          boxShadow:"0 -4px 20px rgba(0,0,0,0.3)",
+        }}>
+          {/* Drag handle */}
+          <div style={{display:"flex",justifyContent:"center",padding:"8px 0 6px"}}>
+            <div style={{width:36,height:4,background:"#C8A96E",borderRadius:2,opacity:0.6}}/>
+          </div>
+
+          {/* Dice + status row */}
+          <div style={{display:"flex",alignItems:"center",gap:10,marginBottom:8}}>
+            <div style={{display:"flex",gap:5,flexShrink:0}}>
+              {[puzzle.dice[0],puzzle.dice[1]].map((d,i)=>(
+                <Die key={i} value={d} size={36} used={i<movesDone.length&&puzzle.dice[0]!==puzzle.dice[1]}/>
+              ))}
+            </div>
+            <div style={{flex:1}}>
+              <div style={{color:"#B8860B",fontSize:14,fontWeight:800,lineHeight:1}}>{label}</div>
+              <div style={{color:"#A08040",fontSize:10,marginTop:1}}>
+                {phase==="playing"
+                  ? diceLeft.length>0 ? diceLeft.length+" move"+(diceLeft.length!==1?"s":"")+" left" : "All moves used"
+                  : phase==="analysing" ? "Analysing..." : ""}
+              </div>
+            </div>
+            {/* Status badge */}
+            {phase==="playing" && (
+              <div style={{display:"flex",alignItems:"center",gap:5,background:allUsed?"rgba(184,134,11,0.12)":"rgba(32,128,64,0.08)",border:"1px solid "+(allUsed?"rgba(184,134,11,0.4)":"rgba(32,128,64,0.35)"),borderRadius:20,padding:"4px 10px",flexShrink:0}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:allUsed?"#B8860B":"#208040",animation:"blink 1.4s ease-in-out infinite"}}/>
+                <span style={{color:allUsed?"#B8860B":"#208040",fontSize:10,fontWeight:700}}>{allUsed?"READY!":movesLeft+" left"}</span>
+              </div>
+            )}
+            {phase==="analysing" && (
+              <div style={{display:"flex",alignItems:"center",gap:5,background:"rgba(184,134,11,0.1)",border:"1px solid rgba(184,134,11,0.35)",borderRadius:20,padding:"4px 10px",flexShrink:0}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"#B8860B",animation:"blink 0.5s ease-in-out infinite"}}/>
+                <span style={{color:"#B8860B",fontSize:10,fontWeight:700}}>THINKING</span>
+              </div>
+            )}
+          </div>
+
+          {/* Puzzle meta + description */}
+          {phase!=="result" && (
+            <div style={{marginBottom:10,padding:"8px 10px",background:"rgba(44,26,10,0.04)",borderRadius:8,border:"1px solid rgba(200,169,110,0.3)"}}>
+              <div style={{display:"flex",alignItems:"center",gap:7,marginBottom:4}}>
+                <span style={{background:puzzle.diffColor+"18",color:puzzle.diffColor,fontSize:9,fontWeight:800,padding:"2px 7px",borderRadius:10,border:"1px solid "+puzzle.diffColor+"33",letterSpacing:0.5}}>{puzzle.difficulty.toUpperCase()}</span>
+                <span style={{color:"#A08040",fontSize:11}}>{puzzle.concept}</span>
+                <span style={{marginLeft:"auto",color:"#C8A96E",fontSize:10}}>#{puzzleIdx+1}</span>
+              </div>
+              <p style={{margin:0,color:"#6B4A1A",fontSize:12,lineHeight:1.5,fontStyle:"italic"}}>{puzzle.description}</p>
+            </div>
+          )}
 
         {/* GO button */}
         {phase==="playing" && (
@@ -950,7 +952,9 @@ export default function SheshBesh() {
             </button>
           </div>
         )}
-      </div>
+        </div>{/* end bottom sheet */}
+      </div>{/* end max-width */}
+    </div>
 
       <style>{`
         @keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
