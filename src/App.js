@@ -215,6 +215,18 @@ function evaluateBoard(board){
   return equityToWinPct(scorePosition(board));
 }
 
+// Pip counts for the top and bottom tray displays
+function yourPips(board){
+  let p=0;
+  for(let i=0;i<24;i++){ const v=board[i]||0; if(v>0) p += v*(i+1); }
+  return p;
+}
+function opponentPips(board){
+  let p=0;
+  for(let i=0;i<24;i++){ const v=board[i]||0; if(v<0) p += (-v)*(24-i); }
+  return p;
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // DIE FACE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -462,18 +474,6 @@ function FlatBoard({
           {botRow.slice(6).map((ptIdx,ci)=>renderPoint(ptIdx,ci+6,false))}
         </div>
       </div>
-
-      {borneOff>0 && (
-        <div style={{
-          position:"absolute", top:6, right:6, zIndex:5,
-          background:"rgba(44,20,4,0.72)",
-          border:"1px solid rgba(212,160,23,0.5)",
-          borderRadius:12, padding:"3px 9px",
-          color:"#FDF6E3", fontSize:10, fontWeight:800, letterSpacing:1,
-        }}>
-          OFF: {borneOff}
-        </div>
-      )}
 
       <style>{`
         @keyframes triPulse{0%,100%{opacity:0.55}50%{opacity:1}}
@@ -884,19 +884,121 @@ export default function SheshBesh() {
   );
 
   // ── PUZZLE SCREEN ────────────────────────────────────────────────────────
+  // Layout matches reference exactly:
+  //  [status bar space]
+  //  [menu btn]              [hint btn]     ← floating round buttons
+  //  [top tray: opponent pip + borne slots]
+  //  ┌──────────────────────────────────────┐
+  //  │             THE BOARD                │
+  //  └──────────────────────────────────────┘
+  //  [bottom tray: your pip + borne slots]
+  //  [safe area]
   return(
     <div style={{
       height:"100vh",
+      width:"100%",
       background:C.boardFelt,
       fontFamily:"Georgia,serif",
       position:"relative",
       overflow:"hidden",
+      display:"flex",
+      flexDirection:"column",
     }}>
-      {/* BOARD — fills entire viewport */}
+      {/* Status-bar safe area */}
+      <div style={{height:"env(safe-area-inset-top, 50px)", flexShrink:0, minHeight:50}}/>
+
+      {/* Floating buttons row — menu (left) and hint (right) */}
       <div style={{
-        position:"absolute", inset:0,
+        padding:"4px 14px 0",
+        display:"flex",
+        justifyContent:"space-between",
+        alignItems:"center",
+        flexShrink:0,
+      }}>
+        <button onClick={()=>setScreen("home")} style={{
+          width:46, height:46, borderRadius:"50%",
+          background:"#EADBB8",
+          border:"1px solid rgba(80,55,30,0.15)",
+          color:C.text, fontSize:20, cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          boxShadow:"0 2px 6px rgba(0,0,0,0.1)",
+          padding:0,
+        }}>⋯</button>
+        <button onClick={handleHint} style={{
+          width:46, height:46, borderRadius:"50%",
+          background:"#8B7355",
+          border:"1px solid rgba(60,40,20,0.3)",
+          cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          boxShadow:"0 2px 6px rgba(0,0,0,0.15)",
+          padding:0,
+        }}>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* Top tray — opponent's borne-off slots + pip count */}
+      <div style={{
+        padding:"10px 14px 6px",
+        display:"flex", gap:10, alignItems:"center",
+        flexShrink:0,
+      }}>
+        {/* Opponent borne-off tray (left side) */}
+        <div style={{
+          flex:1,
+          height:34,
+          background:"rgba(120,85,50,0.22)",
+          border:"1px solid rgba(80,55,30,0.15)",
+          borderRadius:18,
+          display:"flex", alignItems:"center",
+          padding:"0 10px", gap:6,
+        }}>
+          <div style={{
+            background:"#C9482F",
+            color:"#FDF6E3",
+            fontSize:11, fontWeight:800,
+            borderRadius:4,
+            padding:"2px 6px",
+            fontFamily:"Georgia,serif",
+          }}>15</div>
+          {/* Slot placeholders for opponent borne-off (all 0 at puzzle start) */}
+          {Array.from({length:5}).map((_,i)=>(
+            <div key={i} style={{
+              width:18, height:18, borderRadius:"50%",
+              border:"1.5px solid rgba(60,40,20,0.35)",
+              background:"transparent",
+            }}/>
+          ))}
+        </div>
+        {/* Opponent pip count — right side of top tray row */}
+        <div style={{
+          minWidth:100,
+          height:34,
+          background:"rgba(180,150,105,0.35)",
+          border:"1px solid rgba(80,55,30,0.12)",
+          borderRadius:18,
+          display:"flex", alignItems:"center", justifyContent:"center",
+          padding:"0 18px",
+          color:C.text, fontSize:16, fontWeight:700,
+          fontFamily:"Georgia,serif",
+        }}>
+          {opponentPips(liveBoard||puzzle.board)}
+        </div>
+      </div>
+
+      {/* Eval bar — sits between top tray and board */}
+      <div style={{padding:"2px 14px 8px", flexShrink:0}}>
+        <EvalBar pct={currentPct} delta={deltaPct}/>
+      </div>
+
+      {/* THE BOARD — fills the remaining middle space */}
+      <div style={{
+        flex:1,
+        minHeight:0,
         display:"flex", flexDirection:"column",
-        maxWidth:520, margin:"0 auto",
+        position:"relative",
       }}>
         <FlatBoard
           board={liveBoard||puzzle.board}
@@ -911,63 +1013,50 @@ export default function SheshBesh() {
         />
       </div>
 
-      {/* HEADER OVERLAY — floats on top of the board */}
+      {/* Bottom tray — your borne-off slots + pip count */}
       <div style={{
-        position:"absolute", top:0, left:0, right:0,
-        padding:"12px 14px 8px",
-        display:"flex", alignItems:"center", justifyContent:"space-between",
-        zIndex:20, pointerEvents:"none",
+        padding:"6px 14px 14px",
+        display:"flex", gap:10, alignItems:"center",
+        flexShrink:0,
       }}>
-        <button onClick={()=>setScreen("home")} style={{
-          width:40,height:40,borderRadius:"50%",
-          background:"rgba(255,250,235,0.9)",
-          border:"1px solid rgba(80,55,30,0.18)",
-          color:C.text,fontSize:18,cursor:"pointer",
-          display:"flex",alignItems:"center",justifyContent:"center",
-          backdropFilter:"blur(8px)",
-          pointerEvents:"auto",
-          boxShadow:"0 2px 8px rgba(0,0,0,0.08)",
-        }}>←</button>
         <div style={{
-          display:"flex",alignItems:"center",gap:0,
-          background:"rgba(255,250,235,0.9)",
-          borderRadius:20,border:"1px solid rgba(80,55,30,0.18)",
-          overflow:"hidden", backdropFilter:"blur(8px)",
-          pointerEvents:"auto",
-          boxShadow:"0 2px 8px rgba(0,0,0,0.08)",
+          flex:1,
+          height:34,
+          background:"rgba(120,85,50,0.22)",
+          border:"1px solid rgba(80,55,30,0.15)",
+          borderRadius:18,
+          display:"flex", alignItems:"center",
+          padding:"0 10px", gap:6,
         }}>
-          {[{v:iq,l:"IQ",c:C.gold},{v:streak+"🔥",l:"STREAK",c:C.text},{v:accuracy+"%",l:"ACC",c:C.blue}].map((x,i)=>(
-            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 14px",borderRight:i<2?"1px solid rgba(80,55,30,0.15)":"none"}}>
-              <div style={{color:x.c,fontSize:13,fontWeight:800,lineHeight:1}}>{x.v}</div>
-              <div style={{color:C.textSoft,fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
-            </div>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.55}}>
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+            <circle cx="12" cy="7" r="4"/>
+          </svg>
+          {Array.from({length:5}).map((_,i)=>(
+            <div key={i} style={{
+              width:18, height:18, borderRadius:"50%",
+              border:"1.5px solid rgba(60,40,20,0.35)",
+              background: i<borneOff ? "radial-gradient(circle at 38% 30%, #FFFFFF, #E2D3B0)" : "transparent",
+            }}/>
           ))}
         </div>
-        <button onClick={handleHint} style={{
-          width:40, height:40, borderRadius:"50%",
-          background:"rgba(255,250,235,0.9)",
-          border:"1px solid rgba(80,55,30,0.18)",
-          cursor:"pointer",
+        <div style={{
+          minWidth:100,
+          height:34,
+          background:"rgba(180,150,105,0.35)",
+          border:"1px solid rgba(80,55,30,0.12)",
+          borderRadius:18,
           display:"flex", alignItems:"center", justifyContent:"center",
-          flexShrink:0, padding:0,
-          backdropFilter:"blur(8px)",
-          pointerEvents:"auto",
-          boxShadow:"0 2px 8px rgba(0,0,0,0.08)",
+          padding:"0 18px",
+          color:C.text, fontSize:16, fontWeight:700,
+          fontFamily:"Georgia,serif",
         }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
-          </svg>
-        </button>
+          {yourPips(liveBoard||puzzle.board)}
+        </div>
       </div>
 
-      {/* EVAL BAR OVERLAY — floats just below header */}
-      <div style={{
-        position:"absolute", top:62, left:0, right:0,
-        maxWidth:520, margin:"0 auto",
-        zIndex:19, pointerEvents:"none",
-      }}>
-        <EvalBar pct={currentPct} delta={deltaPct}/>
-      </div>
+      {/* Home-indicator safe area */}
+      <div style={{height:"env(safe-area-inset-bottom, 0)", flexShrink:0}}/>
 
       {/* Minimal draggable popup */}
       <ResultPopup open={popupOpen} onClose={()=>{
