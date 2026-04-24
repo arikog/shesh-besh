@@ -465,19 +465,21 @@ function WelcomeModal({ onClose }) {
         <div style={{textAlign:"center",marginBottom:20}}>
           <div style={{fontSize:50,marginBottom:6}}>🎲</div>
           <div style={{fontSize:34,fontWeight:900,letterSpacing:4,color:C.gold,fontFamily:"Georgia,serif",marginBottom:2}}>SHESH BESH</div>
-          <div style={{color:"#B07010",fontSize:20,letterSpacing:6,fontFamily:"Georgia,serif"}}>شش بش</div>
+          <div style={{color:"#B07010",fontSize:20,letterSpacing:6,fontFamily:"Georgia,serif"}}>Նարդի</div>
           <div style={{width:70,height:1.5,background:`linear-gradient(90deg,transparent,${C.gold},transparent)`,margin:"12px auto"}}/>
         </div>
         <div style={{color:C.textMid,fontSize:14,lineHeight:1.85,textAlign:"center",marginBottom:18,fontFamily:"Georgia,serif"}}>
           For over a thousand years, this game echoed through the coffeehouses of{" "}
           <span style={{color:C.gold,fontWeight:700}}>Istanbul</span>,{" "}
-          <span style={{color:C.gold,fontWeight:700}}>Tehran</span>, and{" "}
+          <span style={{color:C.gold,fontWeight:700}}>Tehran</span>,{" "}
+          <span style={{color:C.gold,fontWeight:700}}>Yerevan</span>, and{" "}
           <span style={{color:C.gold,fontWeight:700}}>Beirut</span>.
         </div>
         <div style={{background:"rgba(184,134,11,0.08)",border:"1px solid rgba(184,134,11,0.2)",borderRadius:12,padding:"16px",marginBottom:18}}>
           <p style={{color:C.textMid,fontSize:13,lineHeight:1.85,margin:0,fontFamily:"Georgia,serif",fontStyle:"italic",textAlign:"center"}}>
-            The name itself tells the story — <span style={{color:C.gold,fontStyle:"normal",fontWeight:700}}>Shesh</span> is Six in Persian.{" "}
-            <span style={{color:C.gold,fontStyle:"normal",fontWeight:700}}>Besh</span> is Five in Turkish. A name born at the crossroads of two empires, carrying the spirit of a game that belonged to everyone.
+            The names tell the story — <span style={{color:C.gold,fontStyle:"normal",fontWeight:700}}>Shesh</span> is Six in Persian,{" "}
+            <span style={{color:C.gold,fontStyle:"normal",fontWeight:700}}>Besh</span> is Five in Turkish, and Armenians have played{" "}
+            <span style={{color:C.gold,fontStyle:"normal",fontWeight:700}}>Նարդի</span> in town squares for generations. A game born at the crossroads of empires, belonging to everyone who played it.
           </p>
         </div>
         <div style={{color:C.textSoft,fontSize:12,lineHeight:1.7,textAlign:"center",marginBottom:22,fontFamily:"Georgia,serif"}}>
@@ -486,7 +488,7 @@ function WelcomeModal({ onClose }) {
         <button onClick={onClose} style={{width:"100%",padding:"15px",background:C.goldBtn,border:"none",borderRadius:12,cursor:"pointer",color:"#FDF6E3",fontSize:16,fontWeight:800,letterSpacing:3,fontFamily:"Georgia,serif",boxShadow:"0 4px 20px rgba(184,134,11,0.3)"}}>
           YALLA — LET'S PLAY
         </button>
-        <div style={{color:"#C8A060",fontSize:11,textAlign:"center",marginTop:12,letterSpacing:3}}>بسم الله</div>
+        <div style={{color:"#C8A060",fontSize:11,textAlign:"center",marginTop:12,letterSpacing:3}}>Բարի խաղ</div>
       </div>
       <style>{`@keyframes slideUp2{from{opacity:0;transform:translateY(40px)}to{opacity:1;transform:translateY(0)}}`}</style>
     </div>
@@ -792,7 +794,7 @@ export default function SheshBesh() {
         <div style={{textAlign:"center"}}>
           <div style={{fontSize:52,marginBottom:4}}>🎲</div>
           <div style={{fontSize:38,fontWeight:900,letterSpacing:4,color:C.gold,fontFamily:"Georgia,serif"}}>SHESH BESH</div>
-          <div style={{color:"#B07010",fontSize:16,letterSpacing:6,marginTop:2}}>شش بش</div>
+          <div style={{color:"#B07010",fontSize:16,letterSpacing:6,marginTop:2}}>Նարդի</div>
         </div>
         <div style={{background:C.card,border:`1.5px solid ${C.border}`,borderRadius:16,padding:"20px 24px",width:"100%",display:"flex",justifyContent:"space-around",alignItems:"center",boxShadow:"0 4px 20px rgba(44,26,10,0.12)"}}>
           <IQGauge iq={iq}/>
@@ -837,7 +839,7 @@ export default function SheshBesh() {
           </div>
         </div>
         <div style={{padding:"16px"}}>
-          <p style={{color:C.textMid,fontSize:13,lineHeight:1.7,marginBottom:16,fontStyle:"italic"}}>In traditional Middle Eastern backgammon, every combination has a name rooted in Persian, Arabic, and Turkish — connecting players to centuries of shared history.</p>
+          <p style={{color:C.textMid,fontSize:13,lineHeight:1.7,marginBottom:16,fontStyle:"italic"}}>Across the Middle East and Caucasus, every dice combination has a name rooted in Persian, Arabic, and Turkish — connecting players to centuries of shared history.</p>
           <div style={{display:"flex",flexDirection:"column",gap:6}}>
             {Object.entries(DICE_NAMES).map(([key,name])=>{
               const [d1,d2]=key.split("-").map(Number);
@@ -872,12 +874,12 @@ export default function SheshBesh() {
       {/* Status-bar safe area */}
       <div style={{height:"env(safe-area-inset-top, 12px)", flexShrink:0, minHeight:12}}/>
 
-      {/* Floating buttons — menu (left) and hint (right) */}
+      {/* Top row: menu (left) · centered stats pill · hint (right) */}
       <div style={{
         padding:"4px 14px 6px",
         display:"flex",
-        justifyContent:"space-between",
         alignItems:"center",
+        gap:10,
         flexShrink:0,
       }}>
         <button onClick={()=>setScreen("home")} style={{
@@ -887,8 +889,38 @@ export default function SheshBesh() {
           color:C.text, fontSize:20, cursor:"pointer",
           display:"flex", alignItems:"center", justifyContent:"center",
           boxShadow:"0 2px 6px rgba(0,0,0,0.1)",
-          padding:0,
+          padding:0, flexShrink:0,
         }}>⋯</button>
+
+        {/* Centered stats pill */}
+        <div style={{
+          flex:1,
+          display:"flex",
+          justifyContent:"center",
+        }}>
+          <div style={{
+            display:"flex", alignItems:"center", gap:0,
+            background:"rgba(255,250,235,0.85)",
+            borderRadius:16, border:"1px solid rgba(80,55,30,0.15)",
+            overflow:"hidden",
+          }}>
+            {[
+              {v:iq,l:"IQ",c:C.gold},
+              {v:streak+"🔥",l:"STREAK",c:C.text},
+              {v:accuracy+"%",l:"ACC",c:C.blue},
+            ].map((x,i)=>(
+              <div key={i} style={{
+                display:"flex",flexDirection:"column",alignItems:"center",
+                padding:"4px 14px",
+                borderRight:i<2?"1px solid rgba(80,55,30,0.12)":"none",
+              }}>
+                <div style={{color:x.c,fontSize:13,fontWeight:800,lineHeight:1}}>{x.v}</div>
+                <div style={{color:C.textSoft,fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         <button onClick={handleHint} style={{
           width:46, height:46, borderRadius:"50%",
           background:"#8B7355",
@@ -896,12 +928,39 @@ export default function SheshBesh() {
           cursor:"pointer",
           display:"flex", alignItems:"center", justifyContent:"center",
           boxShadow:"0 2px 6px rgba(0,0,0,0.15)",
-          padding:0,
+          padding:0, flexShrink:0,
         }}>
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
           </svg>
         </button>
+      </div>
+
+      {/* Puzzle info — centered below stats */}
+      <div style={{
+        padding:"0 14px 4px",
+        display:"flex",
+        flexDirection:"column",
+        alignItems:"center",
+        gap:2,
+        flexShrink:0,
+      }}>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{color:C.gold,fontSize:14,fontWeight:800,fontFamily:"Georgia,serif"}}>
+            #{puzzleIdx+1} · {label}
+          </span>
+          <span style={{
+            background:puzzle.diffColor+"22",
+            color:puzzle.diffColor,
+            fontSize:9,fontWeight:800,
+            padding:"2px 7px",borderRadius:10,
+            border:"1px solid "+puzzle.diffColor+"44",
+            letterSpacing:0.5,
+          }}>{puzzle.difficulty.toUpperCase()}</span>
+        </div>
+        <div style={{color:C.textMid,fontSize:11,fontWeight:600}}>
+          {puzzle.concept}
+        </div>
       </div>
 
       {/* Eval bar — tight, directly above the board */}
@@ -975,6 +1034,41 @@ export default function SheshBesh() {
 
       {/* Home-indicator safe area */}
       <div style={{height:"env(safe-area-inset-bottom, 0)", flexShrink:0}}/>
+
+      {/* Floating Re-open button — shown when popup was dismissed mid-result */}
+      {phase==="result" && !popupOpen && (
+        <button
+          onClick={()=>setPopupOpen(true)}
+          style={{
+            position:"fixed",
+            bottom:"calc(env(safe-area-inset-bottom, 0) + 20px)",
+            left:"50%",
+            transform:"translateX(-50%)",
+            padding:"12px 24px",
+            background: isCorrect ? "#4a8f3f" : "#c94a3d",
+            color:"#FDF6E3",
+            border:"none",
+            borderRadius:24,
+            fontSize:14, fontWeight:800, letterSpacing:2,
+            fontFamily:"Georgia,serif",
+            cursor:"pointer",
+            boxShadow:"0 6px 20px rgba(0,0,0,0.28), 0 2px 4px rgba(0,0,0,0.12)",
+            zIndex:850,
+            animation:"fabSlideUp 0.3s ease",
+            display:"flex", alignItems:"center", gap:8,
+          }}
+        >
+          <span style={{fontSize:16}}>{isCorrect ? "✅" : "❌"}</span>
+          {isCorrect ? "SEE NEXT PUZZLE" : "TRY AGAIN"}
+        </button>
+      )}
+
+      <style>{`
+        @keyframes fabSlideUp {
+          from { opacity:0; transform:translate(-50%, 20px); }
+          to   { opacity:1; transform:translate(-50%, 0); }
+        }
+      `}</style>
 
       {/* Minimal draggable popup */}
       <ResultPopup open={popupOpen} onClose={()=>{
