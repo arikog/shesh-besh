@@ -54,30 +54,38 @@ const PUZZLES = [
     description:"Opponent blot on the 7-point — do you hit?",
   },
   {
-    id:2, difficulty:"Intermediate", diffColor:"#E65100", concept:"Building a Prime",
-    dice:[3,2],
+    id:2, difficulty:"Intermediate", diffColor:"#E65100", concept:"Making the 4-point",
+    dice:[4,2],
+    // Standard opening roll 4-2. White to play from starting position.
+    // Best move is universally 8/4, 6/4 — making the 4-point.
+    // Standard start: 24(2), 13(5), 8(3), 6(5) for white; 1(2), 12(5), 17(3), 19(5) for dark.
     board:(()=>{
       const b=new Array(24).fill(0);
-      b[23]=2; b[12]=4; b[7]=3; b[5]=2; b[4]=1; b[3]=1; b[2]=1; b[1]=1;
+      b[23]=2; b[12]=5; b[7]=3; b[5]=5;
       b[0]=-2; b[11]=-5; b[16]=-3; b[18]=-5;
       return b;
     })(),
-    bestMoves:[{from:7,to:4},{from:5,to:3}],
-    bestExplanation:"Extending to a 5-prime traps both opponent checkers with no escape on 94% of rolls. Structural plays like this compound over the remaining game.",
-    description:"You're one move from a 5-prime — seal it.",
+    // 8/4 uses the 4-die (idx 7 → idx 3); 6/4 uses the 2-die (idx 5 → idx 3).
+    bestMoves:[{from:7,to:3},{from:5,to:3}],
+    bestExplanation:"Making the 4-point is the textbook play for a 4-2 opening. It builds inner-board structure and creates a second home-board point behind the 6-point, severely restricting your opponent's back checkers.",
+    description:"Opening 4-2 — make the best inner-board point.",
   },
   {
-    id:3, difficulty:"Advanced", diffColor:C.red, concept:"Back Game Timing",
-    dice:[4,4],
+    id:3, difficulty:"Beginner", diffColor:C.green, concept:"Making the Golden Point",
+    dice:[3,1],
+    // Standard opening 3-1 — universally played as 8/5, 6/5 (making the 5-point).
+    // This is the strongest opening move in backgammon. Every major
+    // engine and textbook agrees. Perfect for a verifiable puzzle.
     board:(()=>{
       const b=new Array(24).fill(0);
-      b[23]=1; b[21]=1; b[12]=3; b[7]=2; b[5]=4; b[4]=2; b[2]=1; b[1]=1;
-      b[22]=-1; b[18]=-4; b[16]=-3; b[11]=-4; b[3]=-2; b[0]=-1;
+      b[23]=2; b[12]=5; b[7]=3; b[5]=5;
+      b[0]=-2; b[11]=-5; b[16]=-3; b[18]=-5;
       return b;
     })(),
-    bestMoves:[{from:5,to:1},{from:4,to:0},{from:12,to:8},{from:12,to:8}],
-    bestExplanation:"Holding your anchors preserves a 78% shot chance as your opponent bears off. Running the back checkers too early destroys your timing.",
-    description:"Back game position — protect your timing.",
+    // 8/5 uses the 3-die (idx 7 → idx 4); 6/5 uses the 1-die (idx 5 → idx 4).
+    bestMoves:[{from:7,to:4},{from:5,to:4}],
+    bestExplanation:"Making the 5-point (the 'golden point') on an opening 3-1 is the strongest play in backgammon. Every world-class engine, from TD-Gammon to XG, agrees. You gain an inner-board point that blocks escape and sets up priming plays.",
+    description:"Opening 3-1 — make the golden point.",
   },
   {
     id:4, difficulty:"Beginner", diffColor:C.green, concept:"Bearing Off",
