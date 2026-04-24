@@ -325,22 +325,22 @@ function FlatBoard({
           cursor:(val>0||hl)?"pointer":"default", minWidth:0,
         }}
       >
-        <svg width="100%" height="100%" viewBox="0 0 40 240" preserveAspectRatio="none"
+        <svg width="100%" height="100%" viewBox="0 0 40 160" preserveAspectRatio="none"
           style={{position:"absolute",inset:0}}>
           {isTop
-            ? <polygon points="20,232 3,4 37,4"  fill={triFill} opacity={0.78}/>
-            : <polygon points="20,8   3,236 37,236" fill={triFill} opacity={0.78}/>
+            ? <polygon points="20,150 1,2 39,2"  fill={triFill} opacity={0.78}/>
+            : <polygon points="20,10  1,158 39,158" fill={triFill} opacity={0.78}/>
           }
           {hl && isTop  && (<>
-            <polygon points="20,232 3,4 37,4" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
-            <polygon points="20,232 3,4 37,4" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,150 1,2 39,2" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,150 1,2 39,2" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
           </>)}
           {hl && !isTop && (<>
-            <polygon points="20,8 3,236 37,236" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
-            <polygon points="20,8 3,236 37,236" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,10 1,158 39,158" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,10 1,158 39,158" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
           </>)}
           {wrongFlash && (
-            <rect x="0" y="0" width="40" height="240" fill="#c94a3d" opacity="0.5"
+            <rect x="0" y="0" width="40" height="160" fill="#c94a3d" opacity="0.5"
               style={{animation:"wrongFlash 0.5s ease-out forwards"}}/>
           )}
         </svg>
@@ -357,12 +357,12 @@ function FlatBoard({
         {count>0 && (
           <div style={{
             position:"absolute",
-            top:    isTop ? 14 : "auto",
-            bottom: isTop ? "auto" : 14,
+            top:    isTop ? 8 : "auto",
+            bottom: isTop ? "auto" : 8,
             left:0, right:0,
             display:"flex",
             flexDirection: isTop ? "column" : "column-reverse",
-            alignItems:"center", gap:1, zIndex:3, pointerEvents:"none",
+            alignItems:"center", gap:0, zIndex:3, pointerEvents:"none",
           }}>
             {Array.from({length:shown}).map((_,i)=>(
               <div key={i} style={{
@@ -406,6 +406,7 @@ function FlatBoard({
       background:feltTexture, userSelect:"none",
       display:"flex", flexDirection:"column", minHeight:0,
     }}>
+      {/* TOP row — fills half the board */}
       <div style={{display:"flex", flex:1, minHeight:0, position:"relative"}}>
         <div style={{flex:1, display:"flex", minWidth:0}}>
           {topRow.slice(0,6).map((ptIdx,ci)=>renderPoint(ptIdx,ci,true))}
@@ -416,8 +417,9 @@ function FlatBoard({
         </div>
       </div>
 
+      {/* MIDDLE strip with dice */}
       <div style={{
-        height:52, flexShrink:0, position:"relative",
+        height:60, flexShrink:0, position:"relative",
         display:"flex", alignItems:"center", justifyContent:"center",
       }}>
         <div style={{position:"absolute", top:0, bottom:0, left:"50%", width:2, transform:"translateX(-50%)", background:C.gapLine}}/>
@@ -428,8 +430,8 @@ function FlatBoard({
             top:"50%", transform:"translateY(-50%)",
             display:"flex", gap:8,
           }}>
-            <Die value={dice[0]} size={38} used={diceUsed[0]}/>
-            <Die value={dice[1]} size={38} used={diceUsed[1]}/>
+            <Die value={dice[0]} size={40} used={diceUsed[0]}/>
+            <Die value={dice[1]} size={40} used={diceUsed[1]}/>
           </div>
         )}
         {canBearOff && (
@@ -450,6 +452,7 @@ function FlatBoard({
         )}
       </div>
 
+      {/* BOTTOM row — fills half the board */}
       <div style={{display:"flex", flex:1, minHeight:0, position:"relative"}}>
         <div style={{flex:1, display:"flex", minWidth:0}}>
           {botRow.slice(0,6).map((ptIdx,ci)=>renderPoint(ptIdx,ci,false))}
@@ -886,63 +889,15 @@ export default function SheshBesh() {
       height:"100vh",
       background:C.boardFelt,
       fontFamily:"Georgia,serif",
-      display:"flex", flexDirection:"column",
+      position:"relative",
       overflow:"hidden",
     }}>
+      {/* BOARD — fills entire viewport */}
       <div style={{
-        maxWidth:520, margin:"0 auto", width:"100%",
+        position:"absolute", inset:0,
         display:"flex", flexDirection:"column",
-        height:"100%",
+        maxWidth:520, margin:"0 auto",
       }}>
-
-        {/* Header: back · stats · hint (lightbulb) */}
-        <div style={{
-          padding:"10px 14px 8px",
-          display:"flex",alignItems:"center",justifyContent:"space-between",
-          background:"transparent",
-          flexShrink:0,
-          zIndex:10,
-        }}>
-          <button onClick={()=>setScreen("home")} style={{
-            width:40,height:40,borderRadius:"50%",
-            background:"rgba(255,250,235,0.85)",
-            border:"1px solid rgba(80,55,30,0.18)",
-            color:C.text,fontSize:18,cursor:"pointer",
-            display:"flex",alignItems:"center",justifyContent:"center",
-            backdropFilter:"blur(8px)",
-          }}>←</button>
-          <div style={{display:"flex",alignItems:"center",gap:0,background:"rgba(255,250,235,0.85)",borderRadius:20,border:"1px solid rgba(80,55,30,0.18)",overflow:"hidden",backdropFilter:"blur(8px)"}}>
-            {[{v:iq,l:"IQ",c:C.gold},{v:streak+"🔥",l:"STREAK",c:C.text},{v:accuracy+"%",l:"ACC",c:C.blue}].map((x,i)=>(
-              <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 14px",borderRight:i<2?"1px solid rgba(80,55,30,0.15)":"none"}}>
-                <div style={{color:x.c,fontSize:13,fontWeight:800,lineHeight:1}}>{x.v}</div>
-                <div style={{color:C.textSoft,fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
-              </div>
-            ))}
-          </div>
-          <button
-            onClick={handleHint}
-            style={{
-              width:40, height:40, borderRadius:"50%",
-              background:"rgba(255,250,235,0.85)",
-              border:"1px solid rgba(80,55,30,0.18)",
-              cursor:"pointer",
-              display:"flex", alignItems:"center", justifyContent:"center",
-              flexShrink:0, padding:0,
-              backdropFilter:"blur(8px)",
-            }}
-          >
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
-            </svg>
-          </button>
-        </div>
-
-        {/* Eval bar */}
-        <div style={{background:"transparent",padding:"2px 0 8px",flexShrink:0}}>
-          <EvalBar pct={currentPct} delta={deltaPct}/>
-        </div>
-
-        {/* Board — edge to edge, fills rest of screen */}
         <FlatBoard
           board={liveBoard||puzzle.board}
           selected={selected}
@@ -954,6 +909,64 @@ export default function SheshBesh() {
           diceUsed={diceUsedFlags}
           wrongFlashPoint={wrongFlash}
         />
+      </div>
+
+      {/* HEADER OVERLAY — floats on top of the board */}
+      <div style={{
+        position:"absolute", top:0, left:0, right:0,
+        padding:"12px 14px 8px",
+        display:"flex", alignItems:"center", justifyContent:"space-between",
+        zIndex:20, pointerEvents:"none",
+      }}>
+        <button onClick={()=>setScreen("home")} style={{
+          width:40,height:40,borderRadius:"50%",
+          background:"rgba(255,250,235,0.9)",
+          border:"1px solid rgba(80,55,30,0.18)",
+          color:C.text,fontSize:18,cursor:"pointer",
+          display:"flex",alignItems:"center",justifyContent:"center",
+          backdropFilter:"blur(8px)",
+          pointerEvents:"auto",
+          boxShadow:"0 2px 8px rgba(0,0,0,0.08)",
+        }}>←</button>
+        <div style={{
+          display:"flex",alignItems:"center",gap:0,
+          background:"rgba(255,250,235,0.9)",
+          borderRadius:20,border:"1px solid rgba(80,55,30,0.18)",
+          overflow:"hidden", backdropFilter:"blur(8px)",
+          pointerEvents:"auto",
+          boxShadow:"0 2px 8px rgba(0,0,0,0.08)",
+        }}>
+          {[{v:iq,l:"IQ",c:C.gold},{v:streak+"🔥",l:"STREAK",c:C.text},{v:accuracy+"%",l:"ACC",c:C.blue}].map((x,i)=>(
+            <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 14px",borderRight:i<2?"1px solid rgba(80,55,30,0.15)":"none"}}>
+              <div style={{color:x.c,fontSize:13,fontWeight:800,lineHeight:1}}>{x.v}</div>
+              <div style={{color:C.textSoft,fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
+            </div>
+          ))}
+        </div>
+        <button onClick={handleHint} style={{
+          width:40, height:40, borderRadius:"50%",
+          background:"rgba(255,250,235,0.9)",
+          border:"1px solid rgba(80,55,30,0.18)",
+          cursor:"pointer",
+          display:"flex", alignItems:"center", justifyContent:"center",
+          flexShrink:0, padding:0,
+          backdropFilter:"blur(8px)",
+          pointerEvents:"auto",
+          boxShadow:"0 2px 8px rgba(0,0,0,0.08)",
+        }}>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
+          </svg>
+        </button>
+      </div>
+
+      {/* EVAL BAR OVERLAY — floats just below header */}
+      <div style={{
+        position:"absolute", top:62, left:0, right:0,
+        maxWidth:520, margin:"0 auto",
+        zIndex:19, pointerEvents:"none",
+      }}>
+        <EvalBar pct={currentPct} delta={deltaPct}/>
       </div>
 
       {/* Minimal draggable popup */}
