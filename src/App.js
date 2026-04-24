@@ -215,18 +215,6 @@ function evaluateBoard(board){
   return equityToWinPct(scorePosition(board));
 }
 
-// Pip counts for the top and bottom tray displays
-function yourPips(board){
-  let p=0;
-  for(let i=0;i<24;i++){ const v=board[i]||0; if(v>0) p += v*(i+1); }
-  return p;
-}
-function opponentPips(board){
-  let p=0;
-  for(let i=0;i<24;i++){ const v=board[i]||0; if(v<0) p += (-v)*(24-i); }
-  return p;
-}
-
 // ═══════════════════════════════════════════════════════════════════════════
 // DIE FACE
 // ═══════════════════════════════════════════════════════════════════════════
@@ -306,7 +294,6 @@ function FlatBoard({
 }){
   const topRow = [23,22,21,20,19,18, 17,16,15,14,13,12];
   const botRow = [0, 1, 2, 3, 4, 5,  6, 7, 8, 9, 10,11];
-  const canBearOff = legalDests.some(d=>d.to===-1);
   const isHL  = (idx) => legalDests.some(d=>d.to===idx);
   const isHit = (idx) => isHL(idx) && board[idx]===-1;
 
@@ -444,22 +431,6 @@ function FlatBoard({
           }}>
             <Die value={dice[0]} size={40} used={diceUsed[0]}/>
             <Die value={dice[1]} size={40} used={diceUsed[1]}/>
-          </div>
-        )}
-        {canBearOff && (
-          <div
-            onClick={onBearOff}
-            style={{
-              position:"absolute", left:"5%", top:"50%", transform:"translateY(-50%)",
-              display:"flex", alignItems:"center", gap:6,
-              background:"rgba(212,160,23,0.2)",
-              border:"1.5px solid rgba(212,160,23,0.7)",
-              borderRadius:18, padding:"4px 10px",
-              cursor:"pointer",
-              animation:"trayPulse 1.2s ease-in-out infinite",
-            }}
-          >
-            <span style={{fontSize:10,fontWeight:800,color:"#B8860B",letterSpacing:1}}>BEAR OFF</span>
           </div>
         )}
       </div>
@@ -809,6 +780,9 @@ export default function SheshBesh() {
     diceLeft.length < (puzzle.dice[0]===puzzle.dice[1]?4:2) - (puzzle.dice[0]===puzzle.dice[1]?2:1),
     diceLeft.length < (puzzle.dice[0]===puzzle.dice[1]?2:0),
   ];
+  // Bear-off pocket is tappable only when a white checker is currently selected
+  // AND that checker can legally bear off with a remaining die
+  const canBearOffFromState = selected!==null && legalDests.some(d=>d.to===-1);
 
   // ── HOME ─────────────────────────────────────────────────────────────────
   if(screen==="home") return(
@@ -884,15 +858,6 @@ export default function SheshBesh() {
   );
 
   // ── PUZZLE SCREEN ────────────────────────────────────────────────────────
-  // Layout matches reference exactly:
-  //  [status bar space]
-  //  [menu btn]              [hint btn]     ← floating round buttons
-  //  [top tray: opponent pip + borne slots]
-  //  ┌──────────────────────────────────────┐
-  //  │             THE BOARD                │
-  //  └──────────────────────────────────────┘
-  //  [bottom tray: your pip + borne slots]
-  //  [safe area]
   return(
     <div style={{
       height:"100vh",
@@ -905,11 +870,11 @@ export default function SheshBesh() {
       flexDirection:"column",
     }}>
       {/* Status-bar safe area */}
-      <div style={{height:"env(safe-area-inset-top, 50px)", flexShrink:0, minHeight:50}}/>
+      <div style={{height:"env(safe-area-inset-top, 12px)", flexShrink:0, minHeight:12}}/>
 
-      {/* Floating buttons row — menu (left) and hint (right) */}
+      {/* Floating buttons — menu (left) and hint (right) */}
       <div style={{
-        padding:"4px 14px 0",
+        padding:"4px 14px 6px",
         display:"flex",
         justifyContent:"space-between",
         alignItems:"center",
@@ -939,57 +904,8 @@ export default function SheshBesh() {
         </button>
       </div>
 
-      {/* Top tray — opponent's borne-off slots + pip count */}
-      <div style={{
-        padding:"10px 14px 6px",
-        display:"flex", gap:10, alignItems:"center",
-        flexShrink:0,
-      }}>
-        {/* Opponent borne-off tray (left side) */}
-        <div style={{
-          flex:1,
-          height:34,
-          background:"rgba(120,85,50,0.22)",
-          border:"1px solid rgba(80,55,30,0.15)",
-          borderRadius:18,
-          display:"flex", alignItems:"center",
-          padding:"0 10px", gap:6,
-        }}>
-          <div style={{
-            background:"#C9482F",
-            color:"#FDF6E3",
-            fontSize:11, fontWeight:800,
-            borderRadius:4,
-            padding:"2px 6px",
-            fontFamily:"Georgia,serif",
-          }}>15</div>
-          {/* Slot placeholders for opponent borne-off (all 0 at puzzle start) */}
-          {Array.from({length:5}).map((_,i)=>(
-            <div key={i} style={{
-              width:18, height:18, borderRadius:"50%",
-              border:"1.5px solid rgba(60,40,20,0.35)",
-              background:"transparent",
-            }}/>
-          ))}
-        </div>
-        {/* Opponent pip count — right side of top tray row */}
-        <div style={{
-          minWidth:100,
-          height:34,
-          background:"rgba(180,150,105,0.35)",
-          border:"1px solid rgba(80,55,30,0.12)",
-          borderRadius:18,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          padding:"0 18px",
-          color:C.text, fontSize:16, fontWeight:700,
-          fontFamily:"Georgia,serif",
-        }}>
-          {opponentPips(liveBoard||puzzle.board)}
-        </div>
-      </div>
-
-      {/* Eval bar — sits between top tray and board */}
-      <div style={{padding:"2px 14px 8px", flexShrink:0}}>
+      {/* Eval bar — tight, directly above the board */}
+      <div style={{padding:"4px 14px 6px", flexShrink:0}}>
         <EvalBar pct={currentPct} delta={deltaPct}/>
       </div>
 
@@ -1013,45 +929,47 @@ export default function SheshBesh() {
         />
       </div>
 
-      {/* Bottom tray — your borne-off slots + pip count */}
-      <div style={{
-        padding:"6px 14px 14px",
-        display:"flex", gap:10, alignItems:"center",
-        flexShrink:0,
-      }}>
-        <div style={{
-          flex:1,
-          height:34,
-          background:"rgba(120,85,50,0.22)",
-          border:"1px solid rgba(80,55,30,0.15)",
-          borderRadius:18,
-          display:"flex", alignItems:"center",
-          padding:"0 10px", gap:6,
-        }}>
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.text} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{opacity:0.55}}>
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
-            <circle cx="12" cy="7" r="4"/>
-          </svg>
-          {Array.from({length:5}).map((_,i)=>(
-            <div key={i} style={{
-              width:18, height:18, borderRadius:"50%",
-              border:"1.5px solid rgba(60,40,20,0.35)",
-              background: i<borneOff ? "radial-gradient(circle at 38% 30%, #FFFFFF, #E2D3B0)" : "transparent",
-            }}/>
-          ))}
-        </div>
-        <div style={{
-          minWidth:100,
-          height:34,
-          background:"rgba(180,150,105,0.35)",
-          border:"1px solid rgba(80,55,30,0.12)",
-          borderRadius:18,
-          display:"flex", alignItems:"center", justifyContent:"center",
-          padding:"0 18px",
-          color:C.text, fontSize:16, fontWeight:700,
-          fontFamily:"Georgia,serif",
-        }}>
-          {yourPips(liveBoard||puzzle.board)}
+      {/* Single bear-off pocket below the board (older design) */}
+      <div style={{padding:"8px 14px 14px", flexShrink:0}}>
+        <div
+          onClick={canBearOffFromState ? handleBearOff : undefined}
+          style={{
+            background: canBearOffFromState ? 'rgba(212,160,23,0.15)' : 'rgba(120,85,50,0.12)',
+            border: canBearOffFromState ? '2px solid rgba(212,160,23,0.7)' : '2px dashed rgba(80,55,30,0.25)',
+            borderRadius:12,
+            padding:'10px 14px',
+            display:'flex', alignItems:'center', gap:10,
+            cursor: canBearOffFromState ? 'pointer' : 'default',
+            animation: canBearOffFromState ? 'trayPulse 1.2s ease-in-out infinite' : 'none',
+          }}
+        >
+          <div style={{display:'flex', flexWrap:'wrap', gap:4, flex:1, minHeight:22}}>
+            {Array.from({length:Math.min(borneOff,15)}).map((_,i)=>(
+              <div key={i} style={{
+                width:20, height:20, borderRadius:'50%',
+                background:'radial-gradient(circle at 38% 30%,#FFFFFF 0%,#F4EBD6 35%,#D4C2A0 75%,#A09070 100%)',
+                border:'1.5px solid #A08B60',
+                boxShadow:'0 1px 3px rgba(0,0,0,0.25)',
+              }}/>
+            ))}
+            {borneOff===0 && (
+              <div style={{color:'rgba(60,40,20,0.35)', fontSize:12, fontStyle:'italic', lineHeight:'22px'}}>
+                Bear off pocket
+              </div>
+            )}
+          </div>
+          <div style={{textAlign:'right'}}>
+            <div style={{
+              color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.45)',
+              fontSize:10, fontWeight:800, letterSpacing:1,
+            }}>
+              {canBearOffFromState ? 'TAP TO BEAR OFF' : 'BORNE OFF'}
+            </div>
+            <div style={{
+              color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.5)',
+              fontSize:18, fontWeight:800, marginTop:1,
+            }}>{borneOff} / 15</div>
+          </div>
         </div>
       </div>
 
