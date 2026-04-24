@@ -16,11 +16,11 @@ const C = {
   green:     "#2E7D32",
   red:       "#B71C1C",
   blue:      "#1565C0",
-  boardFelt: "#D4B896",
-  triDark:   "#8A6F4E",
-  triLight:  "#E6D4B5",
-  gapLine:   "rgba(60,40,20,0.28)",
-  pointNum:  "rgba(60,40,20,0.55)",
+  boardFelt: "#DFC796",      // light wheat cork
+  triDark:   "#8B7355",      // muted warm brown (from reference)
+  triLight:  "#C4AE87",      // subtle sandy tan (from reference)
+  gapLine:   "rgba(80,55,30,0.22)",
+  pointNum:  "rgba(70,50,25,0.45)",
 };
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -251,19 +251,20 @@ function EvalBar({ pct, delta }){
     <div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:3,width:"100%",padding:"0 14px"}}>
       <div style={{
         fontSize:13, fontWeight:800, fontFamily:"Georgia,serif",
-        color: delta>0.5 ? C.green : delta<-0.5 ? C.red : "#E8C84A",
-        background:"rgba(44,20,4,0.75)",
+        color: delta>0.5 ? C.green : delta<-0.5 ? C.red : C.text,
+        background:"rgba(255,250,235,0.85)",
         padding:"2px 12px", borderRadius:12,
-        border:"1px solid rgba(232,200,74,0.3)",
+        border:"1px solid rgba(80,55,30,0.18)",
         transition:"color 0.3s",
         minWidth:52, textAlign:"center",
+        backdropFilter:"blur(8px)",
       }}>
         {Math.round(pct)}%
       </div>
       <div style={{
         width:"100%", height:6, borderRadius:3,
-        background:"#2b2018", overflow:"hidden",
-        boxShadow:"inset 0 1px 2px rgba(0,0,0,0.4), 0 1px 1px rgba(255,255,255,0.1)",
+        background:"rgba(80,55,30,0.3)", overflow:"hidden",
+        boxShadow:"inset 0 1px 2px rgba(0,0,0,0.2), 0 1px 1px rgba(255,255,255,0.4)",
         position:"relative",
       }}>
         <div style={{
@@ -276,7 +277,7 @@ function EvalBar({ pct, delta }){
         }}/>
         <div style={{
           position:"absolute", left:"50%", top:-1, bottom:-1,
-          width:1, background:"rgba(255,255,255,0.2)",
+          width:1, background:"rgba(80,55,30,0.25)",
         }}/>
       </div>
     </div>
@@ -324,22 +325,22 @@ function FlatBoard({
           cursor:(val>0||hl)?"pointer":"default", minWidth:0,
         }}
       >
-        <svg width="100%" height="100%" viewBox="0 0 40 160" preserveAspectRatio="none"
+        <svg width="100%" height="100%" viewBox="0 0 40 240" preserveAspectRatio="none"
           style={{position:"absolute",inset:0}}>
           {isTop
-            ? <polygon points="20,150 1,2 39,2"  fill={triFill} opacity={0.85}/>
-            : <polygon points="20,10  1,158 39,158" fill={triFill} opacity={0.85}/>
+            ? <polygon points="20,232 3,4 37,4"  fill={triFill} opacity={0.78}/>
+            : <polygon points="20,8   3,236 37,236" fill={triFill} opacity={0.78}/>
           }
           {hl && isTop  && (<>
-            <polygon points="20,150 1,2 39,2" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
-            <polygon points="20,150 1,2 39,2" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,232 3,4 37,4" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,232 3,4 37,4" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
           </>)}
           {hl && !isTop && (<>
-            <polygon points="20,10 1,158 39,158" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
-            <polygon points="20,10 1,158 39,158" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,8 3,236 37,236" fill={hlFill} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
+            <polygon points="20,8 3,236 37,236" fill="none" stroke={hlStroke} strokeWidth={2} style={{animation:"triPulse 1.3s ease-in-out infinite"}}/>
           </>)}
           {wrongFlash && (
-            <rect x="0" y="0" width="40" height="160" fill="#c94a3d" opacity="0.5"
+            <rect x="0" y="0" width="40" height="240" fill="#c94a3d" opacity="0.5"
               style={{animation:"wrongFlash 0.5s ease-out forwards"}}/>
           )}
         </svg>
@@ -391,10 +392,11 @@ function FlatBoard({
   };
 
   const feltTexture = `
-    radial-gradient(circle at 20% 30%, rgba(255,255,255,0.04), transparent 50%),
-    radial-gradient(circle at 80% 70%, rgba(0,0,0,0.04), transparent 50%),
-    repeating-linear-gradient(45deg, rgba(139,105,70,0.03) 0 2px, transparent 2px 4px),
-    repeating-linear-gradient(-45deg, rgba(139,105,70,0.03) 0 2px, transparent 2px 4px),
+    radial-gradient(circle at 15% 20%, rgba(255,250,235,0.12), transparent 40%),
+    radial-gradient(circle at 85% 80%, rgba(100,70,30,0.08), transparent 45%),
+    repeating-linear-gradient(0deg, rgba(130,95,55,0.04) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(90deg, rgba(130,95,55,0.035) 0 1px, transparent 1px 3px),
+    repeating-linear-gradient(45deg, rgba(80,55,25,0.025) 0 2px, transparent 2px 5px),
     ${C.boardFelt}
   `;
 
@@ -895,40 +897,48 @@ export default function SheshBesh() {
 
         {/* Header: back · stats · hint (lightbulb) */}
         <div style={{
-          padding:"8px 12px",
+          padding:"10px 14px 8px",
           display:"flex",alignItems:"center",justifyContent:"space-between",
-          background:"rgba(44,20,4,0.95)",
+          background:"transparent",
           flexShrink:0,
           zIndex:10,
         }}>
-          <button onClick={()=>setScreen("home")} style={{background:"none",border:"none",color:"#E8C84A",fontSize:20,cursor:"pointer",padding:"4px 8px",borderRadius:6}}>←</button>
-          <div style={{display:"flex",alignItems:"center",gap:0,background:"rgba(255,255,255,0.08)",borderRadius:20,border:"1px solid rgba(232,200,74,0.25)",overflow:"hidden"}}>
-            {[{v:iq,l:"IQ",c:"#E8C84A"},{v:streak+"🔥",l:"STREAK",c:"#FDF6E3"},{v:accuracy+"%",l:"ACC",c:"#7EC8F0"}].map((x,i)=>(
-              <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 14px",borderRight:i<2?"1px solid rgba(232,200,74,0.2)":"none"}}>
+          <button onClick={()=>setScreen("home")} style={{
+            width:40,height:40,borderRadius:"50%",
+            background:"rgba(255,250,235,0.85)",
+            border:"1px solid rgba(80,55,30,0.18)",
+            color:C.text,fontSize:18,cursor:"pointer",
+            display:"flex",alignItems:"center",justifyContent:"center",
+            backdropFilter:"blur(8px)",
+          }}>←</button>
+          <div style={{display:"flex",alignItems:"center",gap:0,background:"rgba(255,250,235,0.85)",borderRadius:20,border:"1px solid rgba(80,55,30,0.18)",overflow:"hidden",backdropFilter:"blur(8px)"}}>
+            {[{v:iq,l:"IQ",c:C.gold},{v:streak+"🔥",l:"STREAK",c:C.text},{v:accuracy+"%",l:"ACC",c:C.blue}].map((x,i)=>(
+              <div key={i} style={{display:"flex",flexDirection:"column",alignItems:"center",padding:"4px 14px",borderRight:i<2?"1px solid rgba(80,55,30,0.15)":"none"}}>
                 <div style={{color:x.c,fontSize:13,fontWeight:800,lineHeight:1}}>{x.v}</div>
-                <div style={{color:"rgba(255,255,255,0.4)",fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
+                <div style={{color:C.textSoft,fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
               </div>
             ))}
           </div>
           <button
             onClick={handleHint}
             style={{
-              width:30, height:30, borderRadius:"50%",
-              background:"rgba(255,255,255,0.08)",
-              border:"1px solid rgba(232,200,74,0.35)",
+              width:40, height:40, borderRadius:"50%",
+              background:"rgba(255,250,235,0.85)",
+              border:"1px solid rgba(80,55,30,0.18)",
               cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
               flexShrink:0, padding:0,
+              backdropFilter:"blur(8px)",
             }}
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#E8C84A" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke={C.gold} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
             </svg>
           </button>
         </div>
 
         {/* Eval bar */}
-        <div style={{background:"rgba(44,20,4,0.95)",padding:"4px 0 10px",flexShrink:0}}>
+        <div style={{background:"transparent",padding:"2px 0 8px",flexShrink:0}}>
           <EvalBar pct={currentPct} delta={deltaPct}/>
         </div>
 
