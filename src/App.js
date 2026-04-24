@@ -821,7 +821,6 @@ export default function SheshBesh() {
   const puzzle      = PUZZLES[puzzleIdx%PUZZLES.length];
   const accuracy    = totalAnswered>0?Math.round((totalCorrect/totalAnswered)*100):0;
   const label       = diceLabel(puzzle.dice[0],puzzle.dice[1]);
-  const movesNeeded = puzzle.dice[0]===puzzle.dice[1]?4:2;
   const iqDelta     = puzzle.difficulty==="Advanced"?18:puzzle.difficulty==="Intermediate"?12:8;
 
   function initPuzzle(p) {
