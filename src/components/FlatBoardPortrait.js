@@ -1,23 +1,29 @@
 import { C } from "../constants/palette";
 import Die from "./Die";
 
-const boardVarsCss = `
-  [data-flat-board-root]{
+/** Portrait phone: same indices as FlatBoard; vertical bar, tall triangles (not a rotated board). */
+const portraitBoardVarsCss = `
+  [data-flat-board-portrait-root]{
     height:100%;
     min-height:0;
-    --board-bar: clamp(2px, 0.32cqw, 5px);
-    --label-strip-h: clamp(16px, 3.65cqh, 32px);
-    --dice-strip-h: clamp(52px, 7.25cqw, 96px);
+    --board-bar: clamp(3px, 0.5cqw, 8px);
+    --label-strip-h: clamp(14px, 3.35cqh, 30px);
+    --dice-strip-h: clamp(44px, 6.85cqw, 88px);
     --half-h: calc((100cqh - var(--dice-strip-h)) / 2);
     --point-play-h: calc(var(--half-h) - var(--label-strip-h));
-    --checker-size: min(calc(100cqw / 13), calc(var(--point-play-h) / 5.35));
-    --dice-face: min(calc(var(--checker-size) * 1.05), clamp(52px, 12cqw, 96px));
+    --checker-size: min(calc((100cqw - var(--board-bar)) / 14), calc(var(--point-play-h) / 5.35));
+    --dice-face: min(calc(var(--checker-size) * 1.05), clamp(44px, 11cqw, 88px));
   }
 `;
 
-export default function FlatBoard({
-  board, selected, legalDests, onPointClick,
-  dice = [], diceUsed = [], wrongFlashPoint = null,
+export default function FlatBoardPortrait({
+  board,
+  selected,
+  legalDests,
+  onPointClick,
+  dice = [],
+  diceUsed = [],
+  wrongFlashPoint = null,
 }) {
   const topRow = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12];
   const botRow = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -37,7 +43,7 @@ export default function FlatBoard({
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          fontSize: "clamp(9px, 1.95cqw, 14px)",
+          fontSize: "clamp(8px, 1.95cqw, 13px)",
           fontWeight: 600,
           color: C.pointNum,
           fontFamily: "system-ui, -apple-system, sans-serif",
@@ -133,29 +139,29 @@ export default function FlatBoard({
         <svg
           width="100%"
           height="100%"
-          viewBox="0 0 40 160"
+          viewBox="0 0 50 250"
           preserveAspectRatio="none"
           style={{ position: "absolute", inset: 0 }}
         >
           {isTop ? (
-            <polygon points="20,150 1,2 39,2" fill={triFill} opacity={0.78} />
+            <polygon points="25,237 3,6 47,6" fill={triFill} opacity={0.78} />
           ) : (
-            <polygon points="20,10  1,158 39,158" fill={triFill} opacity={0.78} />
+            <polygon points="25,13 3,244 47,244" fill={triFill} opacity={0.78} />
           )}
           {hl && isTop && (
             <>
-              <polygon points="20,150 1,2 39,2" fill={hlFill} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
-              <polygon points="20,150 1,2 39,2" fill="none" stroke={hlStroke} strokeWidth={2} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
+              <polygon points="25,237 3,6 47,6" fill={hlFill} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
+              <polygon points="25,237 3,6 47,6" fill="none" stroke={hlStroke} strokeWidth={2} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
             </>
           )}
           {hl && !isTop && (
             <>
-              <polygon points="20,10 1,158 39,158" fill={hlFill} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
-              <polygon points="20,10 1,158 39,158" fill="none" stroke={hlStroke} strokeWidth={2} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
+              <polygon points="25,13 3,244 47,244" fill={hlFill} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
+              <polygon points="25,13 3,244 47,244" fill="none" stroke={hlStroke} strokeWidth={2} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
             </>
           )}
           {wrongFlash && (
-            <rect x="0" y="0" width="40" height="160" fill="#c94a3d" opacity="0.5" style={{ animation: "wrongFlash 0.5s ease-out forwards" }} />
+            <rect x="0" y="0" width="50" height="250" fill="#c94a3d" opacity="0.5" style={{ animation: "wrongFlash 0.5s ease-out forwards" }} />
           )}
         </svg>
 
@@ -231,7 +237,7 @@ export default function FlatBoard({
       <div style={{ flex: 1, display: "flex", flexDirection: "row", minWidth: 0, minHeight: 0 }}>
         {topRow.slice(0, 6).map((ptIdx, ci) => renderPoint(ptIdx, ci, true))}
       </div>
-      <div style={{ width: "var(--board-bar)", flexShrink: 0, background: C.gapLine }} />
+      <div style={{ width: "var(--board-bar)", flexShrink: 0, background: C.gapLine }} aria-hidden />
       <div style={{ flex: 1, display: "flex", flexDirection: "row", minWidth: 0, minHeight: 0 }}>
         {topRow.slice(6).map((ptIdx, ci) => renderPoint(ptIdx, ci + 6, true))}
       </div>
@@ -243,7 +249,7 @@ export default function FlatBoard({
       <div style={{ flex: 1, display: "flex", flexDirection: "row", minWidth: 0, minHeight: 0 }}>
         {botRow.slice(0, 6).map((ptIdx, ci) => renderPoint(ptIdx, ci, false))}
       </div>
-      <div style={{ width: "var(--board-bar)", flexShrink: 0, background: C.gapLine }} />
+      <div style={{ width: "var(--board-bar)", flexShrink: 0, background: C.gapLine }} aria-hidden />
       <div style={{ flex: 1, display: "flex", flexDirection: "row", minWidth: 0, minHeight: 0 }}>
         {botRow.slice(6).map((ptIdx, ci) => renderPoint(ptIdx, ci + 6, false))}
       </div>
@@ -266,18 +272,18 @@ export default function FlatBoard({
         width: "100%",
         height: "100%",
         containerType: "size",
-        containerName: "flatboard",
+        containerName: "flatboardportrait",
         background: feltTexture,
         userSelect: "none",
       }}
     >
-      <style>{`${boardVarsCss}
+      <style>{`${portraitBoardVarsCss}
         @keyframes triPulse{0%,100%{opacity:0.55}50%{opacity:1}}
         @keyframes trayPulse{0%,100%{border-color:rgba(212,160,23,0.5)}50%{border-color:rgba(212,160,23,0.95)}}
         @keyframes wrongFlash{0%{opacity:0.5}100%{opacity:0}}
       `}</style>
       <div
-        data-flat-board-root
+        data-flat-board-portrait-root
         style={{
           display: "flex",
           flexDirection: "column",
@@ -286,13 +292,11 @@ export default function FlatBoard({
           overflow: "hidden",
         }}
       >
-        {/* Top hemisphere: reserved number strip · points */}
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           {stripTop}
           {pointRowTop}
         </div>
 
-        {/* Middle — dice */}
         <div
           role="presentation"
           style={{
@@ -322,8 +326,7 @@ export default function FlatBoard({
             <div
               style={{
                 position: "absolute",
-                right: "18%",
-                left: "auto",
+                left: "20%",
                 top: "50%",
                 transform: "translateY(-50%)",
                 display: "flex",
@@ -341,7 +344,6 @@ export default function FlatBoard({
           )}
         </div>
 
-        {/* Bottom hemisphere: points · reserved number strip */}
         <div style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}>
           {pointRowBot}
           {stripBot}

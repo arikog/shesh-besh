@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { C } from "../constants/palette";
 import { playSplashDice, tryResumeAudioContext } from "../audio/puzzleSfx";
+import { COFFEEHOUSE_LINE_ART_URL, COFFEEHOUSE_SPLASH_LEGACY_URL } from "../constants/publicAssets";
 
-/** Public path — preload matches in index.html */
-const SPLASH_ART = `${process.env.PUBLIC_URL ?? ""}/images/coffeehouse-splash.png`;
-/** Intrinsic size (coffeehouse hero asset) — stable layout slot */
 const ART_W = 1024;
 const ART_H = 683;
 
 /** Full-viewport intro every load; tap to skip; ~1.8s sequence (PNG — no stroke-draw). */
 export default function IntroSplash({ onDone }) {
+  const [artSrc, setArtSrc] = useState(COFFEEHOUSE_LINE_ART_URL);
   const finished = useRef(false);
   const onDoneRef = useRef(onDone);
   onDoneRef.current = onDone;
@@ -252,13 +251,14 @@ export default function IntroSplash({ onDone }) {
         <div className="intro-splash__art-wrap">
           <img
             className="intro-splash__art"
-            src={SPLASH_ART}
+            src={artSrc}
             alt=""
             width={ART_W}
             height={ART_H}
             decoding="sync"
             fetchPriority="high"
             draggable={false}
+            onError={() => setArtSrc(COFFEEHOUSE_SPLASH_LEGACY_URL)}
           />
         </div>
         <div className="intro-splash__wordmark">SHESH BESH</div>

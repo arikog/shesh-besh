@@ -4,6 +4,7 @@ import { evaluatePosition } from "../engine/evaluator";
 import { applyMove } from "../game/moveEngine";
 import EvalBar from "../components/EvalBar";
 import FlatBoard from "../components/FlatBoard";
+import FlatBoardPortrait from "../components/FlatBoardPortrait";
 import ResultPopup from "../components/ResultPopup";
 import PashaAlert from "../components/PashaAlert";
 
@@ -344,18 +345,29 @@ export default function PuzzleScreen(props) {
             className={`puzzle-board-play-slot${narrowPortraitBoard ? " puzzle-board-play-slot--narrow-portrait" : ""}`}
           >
             <div
-              className={`puzzle-board-aspect${narrowPortraitBoard ? " puzzle-board-aspect--narrow-portrait-spin" : ""}`}
+              className={`puzzle-board-aspect${narrowPortraitBoard ? " puzzle-board-aspect--narrow-portrait-native" : ""}`}
             >
-              <FlatBoard
-                board={liveBoard || puzzle.board}
-                selected={selected}
-                legalDests={legalDests}
-                onPointClick={handlePointClick}
-                dice={[puzzle.dice[0], puzzle.dice[1]]}
-                diceUsed={diceUsedFlags}
-                wrongFlashPoint={wrongFlash}
-                rotatedPortrait={narrowPortraitBoard}
-              />
+              {narrowPortraitBoard ? (
+                <FlatBoardPortrait
+                  board={liveBoard || puzzle.board}
+                  selected={selected}
+                  legalDests={legalDests}
+                  onPointClick={handlePointClick}
+                  dice={[puzzle.dice[0], puzzle.dice[1]]}
+                  diceUsed={diceUsedFlags}
+                  wrongFlashPoint={wrongFlash}
+                />
+              ) : (
+                <FlatBoard
+                  board={liveBoard || puzzle.board}
+                  selected={selected}
+                  legalDests={legalDests}
+                  onPointClick={handlePointClick}
+                  dice={[puzzle.dice[0], puzzle.dice[1]]}
+                  diceUsed={diceUsedFlags}
+                  wrongFlashPoint={wrongFlash}
+                />
+              )}
             </div>
           </div>
 
@@ -632,8 +644,8 @@ export default function PuzzleScreen(props) {
         }
 
         /*
-         * Phone portrait — spin board −90° so wide layout maps to tall viewport (major BG apps convention).
-         * iPad portrait (≥768 css px) skips this breakpoint; phones in landscape skip via orientation query.
+         * Phone portrait — native tall board fills play slot (no rotation).
+         * iPad portrait (≥768 css px) uses horizontal FlatBoard via width breakpoint.
          */
         @media (max-width: 767.98px) and (orientation: portrait) {
           .puzzle-board-mat--narrow-portrait {
@@ -657,18 +669,18 @@ export default function PuzzleScreen(props) {
             min-height: 0 !important;
           }
 
-          .puzzle-board-aspect.puzzle-board-aspect--narrow-portrait-spin {
+          .puzzle-board-aspect.puzzle-board-aspect--narrow-portrait-native {
             box-sizing: border-box;
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            width: min(100cqh, calc(100cqw * 3 / 2)) !important;
-            aspect-ratio: 3 / 2 !important;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            aspect-ratio: unset !important;
             max-height: none !important;
-            height: auto !important;
-            flex-shrink: 0 !important;
-            margin-inline: unset !important;
-            transform: translate(-50%, -50%) rotate(-90deg);
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+            flex-shrink: 1 !important;
+            transform: none !important;
+            margin-inline: 0 !important;
             overflow: hidden;
           }
         }
