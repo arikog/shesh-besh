@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { diceLabel } from "./constants/dice";
 import { PUZZLES } from "./data/puzzles";
 import { evaluatePosition } from "./engine/evaluator";
@@ -105,14 +105,12 @@ export default function SheshBesh() {
     return (
       <>
         {node}
-        {showIntroSplash && (
-          <IntroSplash onDone={() => setShowIntroSplash(false)} />
-        )}
+        {showIntroSplash && <IntroSplash onDone={dismissIntroSplash} />}
       </>
     );
   }
 
-  function hydrateProgress(saved) {
+  const hydrateProgress = useCallback((saved) => {
     if (!saved) return;
     setIq(saved.iq);
     setStreak(saved.streak);
@@ -120,7 +118,11 @@ export default function SheshBesh() {
     setCompletedPuzzleIds(saved.completedPuzzleIds);
     setHistory(saved.history);
     setTotalAnswered(saved.history.length);
-  }
+  }, []);
+
+  const dismissIntroSplash = useCallback(() => {
+    setShowIntroSplash(false);
+  }, []);
 
   function isMovePrefixValid(attemptedMoves, bestMoves) {
     if (attemptedMoves.length > bestMoves.length) return false;

@@ -63,16 +63,20 @@ export default function PuzzleScreen(props) {
   }, [attempts, isCorrect, onRecordPuzzleAttempt, phase, popupOpen, puzzle.id, resultIqDelta]);
 
   return (
-    <div style={{
-      height:"100vh",
-      width:"100%",
-      background:`linear-gradient(165deg,${C.bg} 0%,${C.bgDeep} 72%)`,
-      fontFamily:"Georgia,serif",
-      position:"relative",
-      overflow:"hidden",
-      display:"flex",
-      flexDirection:"column",
-    }}>
+    <div
+      className="puzzle-screen-root"
+      style={{
+        width: "100%",
+        minHeight: "100dvh",
+        height: "100dvh",
+        background: `linear-gradient(165deg,${C.bg} 0%,${C.bgDeep} 72%)`,
+        fontFamily: "Georgia,serif",
+        position: "relative",
+        overflow: "hidden",
+        display: "flex",
+        flexDirection: "column",
+      }}
+    >
       {/* Status-bar safe area */}
       <div style={{height:"env(safe-area-inset-top, 12px)", flexShrink:0, minHeight:8}}/>
 
@@ -209,15 +213,13 @@ export default function PuzzleScreen(props) {
         <EvalBar pct={currentPct} delta={deltaPct}/>
       </div>
 
-      {/* Play area: desktop = no overflow, board sized to min(width, height limits); mobile = scroll OK */}
+      {/* Play area: compact fills viewport below header with cream mat; desktop = framed card */}
       <div
         className="puzzle-play-area"
         style={{
           flex: 1,
           minHeight: 0,
           width: "100%",
-          paddingTop: 14,
-          paddingBottom: 10,
           boxSizing: "border-box",
         }}
       >
@@ -236,26 +238,24 @@ export default function PuzzleScreen(props) {
               gap: 0,
             }}
           >
-          <div className="puzzle-board-aspect">
-            <FlatBoard
-              board={liveBoard||puzzle.board}
-              selected={selected}
-              legalDests={legalDests}
-              onPointClick={handlePointClick}
-              onBearOff={handleBearOff}
-              borneOff={borneOff}
-              dice={[puzzle.dice[0], puzzle.dice[1]]}
-              diceUsed={diceUsedFlags}
-              wrongFlashPoint={wrongFlash}
-            />
+          <div className="puzzle-board-play-slot">
+            <div className="puzzle-board-aspect">
+              <FlatBoard
+                board={liveBoard||puzzle.board}
+                selected={selected}
+                legalDests={legalDests}
+                onPointClick={handlePointClick}
+                onBearOff={handleBearOff}
+                borneOff={borneOff}
+                dice={[puzzle.dice[0], puzzle.dice[1]]}
+                diceUsed={diceUsedFlags}
+                wrongFlashPoint={wrongFlash}
+              />
+            </div>
           </div>
 
-          {/* Bear-off — width tracks mat (same width as board); avoid cqw from wrong container */}
-          <div style={{
-            flexShrink:0,
-            paddingTop:"clamp(6px, 1.4vw, 10px)",
-            width:"100%",
-          }}>
+          {/* Bear-off — width tracks mat (same width as board); safe-area padding compact-only */}
+          <div className="puzzle-bear-off-row">
             <div
               onClick={canBearOffFromState ? handleBearOff : undefined}
               style={{
@@ -316,8 +316,8 @@ export default function PuzzleScreen(props) {
         </div>
       </div>
 
-      {/* Home-indicator safe area */}
-      <div style={{height:"env(safe-area-inset-bottom, 0)", flexShrink:0}}/>
+      {/* Compact: safe area lives in cream mat (bear-off). Desktop keeps a thin burgundy pad below framed card */}
+      <div className="puzzle-bottom-safe-pad" aria-hidden />
 
       {/* Floating Re-open button — shown when popup was dismissed mid-result */}
       {phase==="result" && !popupOpen && (
@@ -344,6 +344,8 @@ export default function PuzzleScreen(props) {
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
+          padding-top: 0;
+          padding-bottom: 0;
           padding-left: clamp(12px, 2vw, 36px);
           padding-right: clamp(12px, 2vw, 36px);
         }
@@ -362,6 +364,31 @@ export default function PuzzleScreen(props) {
           flex-direction: column;
         }
 
+        .puzzle-board-play-slot {
+          width: 100%;
+          min-height: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex: 0 1 auto;
+        }
+
+        /* Extra bottom slice under framed desktop card — home-indicator / bezel */
+        .puzzle-bottom-safe-pad {
+          flex-shrink: 0;
+          display: none;
+          min-height: 0;
+          width: 100%;
+          box-sizing: border-box;
+          pointer-events: none;
+        }
+
+        .puzzle-bear-off-row {
+          flex-shrink: 0;
+          width: 100%;
+          padding-top: clamp(6px, 1.4vw, 10px);
+        }
+
         .puzzle-chrome.puzzle-chrome--top,
         .puzzle-chrome.puzzle-chrome--title,
         .puzzle-chrome.puzzle-chrome--eval {
@@ -369,15 +396,30 @@ export default function PuzzleScreen(props) {
           padding-right: clamp(12px, 2vw, 36px);
         }
 
-        @media (min-width: 768px) {
+        /*
+         * ≥1024px: centered card / burgundy gutter (current desktop UX).
+         * ≤1023.98px: full-bleed cream under header → bottom-of-viewport mat.
+         */
+        @media (min-width: 1024px) {
           .puzzle-play-area {
             overflow: hidden;
+            padding-top: 14px;
+            padding-bottom: 10px;
+          }
+
+          .puzzle-board-play-slot {
+            display: flex;
+            justify-content: center;
+          }
+
+          .puzzle-bottom-safe-pad {
+            display: block;
+            height: env(safe-area-inset-bottom, 0px);
           }
 
           /*
-           * Real backgammon feels wider-than-tall: use 5:3 (vs 3:2) so triangles are less elongated.
-           * Board box = smaller of width cap vs height cap, using pane cqh so the felt + tray fits.
-           * --pane-slot reserves mat vertical padding (~28px) + bear-off row (~80–94px) + gap (~22px).
+           * Wide board framing: height = 3/5 of width → aspect 5:3.
+           * --pane-slot reserves mat vertical padding + bear-off + gap (~22px).
            */
           .puzzle-board-aspect {
             --pane-slot: clamp(132px, 15cqh, 162px);
@@ -390,10 +432,12 @@ export default function PuzzleScreen(props) {
             width: var(--board-w);
             height: calc(var(--board-w) * 3 / 5);
             max-width: min(1100px, 95cqw);
+            position: relative;
+            overflow: hidden;
           }
         }
 
-        @media (max-width: 767.98px) {
+        @media (max-width: 1023.98px) {
           .puzzle-chrome.puzzle-chrome--top,
           .puzzle-chrome.puzzle-chrome--title,
           .puzzle-chrome.puzzle-chrome--eval {
@@ -402,17 +446,19 @@ export default function PuzzleScreen(props) {
           }
 
           .puzzle-play-area {
-            overflow-x: hidden;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
+            overflow: hidden;
             align-items: stretch;
+            justify-content: flex-start;
             padding-left: 0;
             padding-right: 0;
+            padding-top: 0;
+            padding-bottom: 0;
             width: 100%;
           }
 
           .puzzle-centered-col {
             width: 100%;
+            flex: 1 1 auto;
             max-width: none;
             margin-left: 0;
             margin-right: 0;
@@ -421,14 +467,38 @@ export default function PuzzleScreen(props) {
           }
 
           .puzzle-board-mat {
+            flex: 1 1 auto;
             border-radius: 0;
+            min-height: 0;
           }
 
+          .puzzle-board-play-slot {
+            flex: 1 1 auto;
+            min-height: 0;
+            container-type: size;
+          }
+
+          /*
+           * Inscribed 3:2 rectangle; extra vertical space stays cream (centering in slot).
+           * cqw/cqh measured against play-slot container.
+           */
           .puzzle-board-aspect {
-            width: 100%;
+            box-sizing: border-box;
+            width: min(100cqw, calc(100cqh * 3 / 2));
             aspect-ratio: 3 / 2;
-            height: auto;
-            max-width: 100%;
+            flex-shrink: 0;
+            max-height: 100cqh;
+            position: relative;
+            overflow: hidden;
+          }
+
+          .puzzle-bear-off-row {
+            padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
+          }
+
+          .puzzle-bottom-safe-pad {
+            display: none !important;
+            height: 0 !important;
           }
         }
       `}</style>

@@ -11,6 +11,8 @@ const ART_H = 683;
 /** Full-viewport intro every load; tap to skip; ~1.8s sequence (PNG — no stroke-draw). */
 export default function IntroSplash({ onDone }) {
   const finished = useRef(false);
+  const onDoneRef = useRef(onDone);
+  onDoneRef.current = onDone;
   const reduceMotion = useMemo(
     () =>
       typeof window !== "undefined" &&
@@ -22,8 +24,8 @@ export default function IntroSplash({ onDone }) {
   const finish = useCallback(() => {
     if (finished.current) return;
     finished.current = true;
-    onDone();
-  }, [onDone]);
+    onDoneRef.current();
+  }, []);
 
   const [tapSkip, setTapSkip] = useState(false);
 
