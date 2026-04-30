@@ -17,7 +17,9 @@ const boardVarsCss = `
 
 export default function FlatBoard({
   board, selected, legalDests, onPointClick,
-  dice = [], diceUsed = [], wrongFlashPoint = null
+  dice = [], diceUsed = [], wrongFlashPoint = null,
+  /** Mobile portrait spin: tuck dice nearer the vertical bar strip (physical left-of-bar reads better after −90°) */
+  rotatedPortrait = false,
 }) {
   const topRow = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12];
   const botRow = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
@@ -322,9 +324,10 @@ export default function FlatBoard({
             <div
               style={{
                 position: "absolute",
-                right: "18%",
+                ...(rotatedPortrait
+                  ? { left: "16%", right: "auto", transform: "translateY(-50%)" }
+                  : { right: "18%", left: "auto", transform: "translateY(-50%)" }),
                 top: "50%",
-                transform: "translateY(-50%)",
                 display: "flex",
                 alignItems: "center",
                 gap: "calc(var(--dice-face) * 0.22)",

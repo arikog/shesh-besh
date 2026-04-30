@@ -5,6 +5,7 @@ import IQGauge from "../components/IQGauge";
 import { loadProgress } from "../storage/progress";
 
 const NOTCH = 16;
+const SPLASH_ART = `${process.env.PUBLIC_URL ?? ""}/images/coffeehouse-splash.png`;
 
 export default function HomeScreen({
   showWelcome,
@@ -37,125 +38,253 @@ export default function HomeScreen({
 
   return (
     <div
+      className="home-screen-root"
       style={{
-        minHeight: "100vh",
+        minHeight: "100dvh",
+        height: "100dvh",
         background: pageBg,
         display: "flex",
         flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: "24px 20px",
         fontFamily: "Georgia,serif",
+        boxSizing: "border-box",
       }}
     >
       {showWelcome && <WelcomeModal onClose={() => setShowWelcome(false)} />}
-      <div style={{ maxWidth: 400, width: "100%", display: "flex", flexDirection: "column", alignItems: "center", gap: 24 }}>
-        <div style={{ textAlign: "center" }}>
-          <div style={{ fontSize: 52, marginBottom: 6 }}>🎲</div>
-          <div style={{ fontSize: 38, fontWeight: 900, letterSpacing: 4, color: C.gold, fontFamily: "Georgia,serif" }}>
-            SHESH BESH
-          </div>
-        </div>
 
+      {/* Tight top: status/safe area only */}
+      <div
+        className="home-top-safe"
+        style={{
+          flexShrink: 0,
+          height: "env(safe-area-inset-top, 0px)",
+          minHeight: 0,
+        }}
+        aria-hidden
+      />
+
+      <div
+        className="home-scroll-column"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          width: "100%",
+          overflowY: "auto",
+          overflowX: "hidden",
+          WebkitOverflowScrolling: "touch",
+          boxSizing: "border-box",
+          paddingLeft: "max(24px, env(safe-area-inset-left, 0px))",
+          paddingRight: "max(24px, env(safe-area-inset-right, 0px))",
+          paddingTop: 4,
+        }}
+      >
         <div
+          className="home-inner"
           style={{
-            position: "relative",
             width: "100%",
-            background: `linear-gradient(172deg,#fffdf8,#f5ecd9 55%,${C.surface})`,
-            clipPath: `polygon(${statClip})`,
-            WebkitClipPath: `polygon(${statClip})`,
-            border: `1.5px solid ${C.borderStrong}`,
-            boxShadow: `${C.shadowCard}, inset 0 0 0 1px ${C.borderInner}`,
-            padding: "22px 20px",
             display: "flex",
-            justifyContent: "space-around",
+            flexDirection: "column",
             alignItems: "center",
+            flex: 1,
+            minHeight: 0,
+            boxSizing: "border-box",
           }}
         >
-          <IQGauge iq={iq} />
-          <div style={{ width: 1, height: 60, background: C.border }} />
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: C.gold, fontSize: 22, fontWeight: 800 }}>{streak}🔥</div>
-              <div style={{ color: C.textSoft, fontSize: 10, letterSpacing: 1 }}>STREAK</div>
-            </div>
-            <div style={{ textAlign: "center" }}>
-              <div style={{ color: C.blue, fontSize: 22, fontWeight: 800 }}>{accuracy}%</div>
-              <div style={{ color: C.textSoft, fontSize: 10, letterSpacing: 1 }}>ACCURACY</div>
+          {/* Silhouette + wordmark (visual pair) */}
+          <div
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              gap: 14,
+              flexShrink: 0,
+            }}
+          >
+            <img
+              className="home-hero-img"
+              src={SPLASH_ART}
+              alt=""
+              width={1024}
+              height={683}
+              decoding="async"
+              draggable={false}
+              style={{
+                display: "block",
+                height: "auto",
+                backgroundColor: C.bgPrimary,
+              }}
+            />
+            <div
+              style={{
+                textAlign: "center",
+                fontSize: 38,
+                fontWeight: 900,
+                letterSpacing: 4,
+                color: C.gold,
+                fontFamily: "Georgia,serif",
+                lineHeight: 1.1,
+              }}
+            >
+              SHESH BESH
             </div>
           </div>
-          <div style={{ width: 1, height: 60, background: C.border }} />
-          <div style={{ textAlign: "center" }}>
-            <div style={{ color: C.text, fontSize: 22, fontWeight: 800 }}>{totalAnswered}</div>
-            <div style={{ color: C.textSoft, fontSize: 10, letterSpacing: 1 }}>PUZZLES</div>
-            <div style={{ marginTop: 8 }}>
-              <div style={{ color: C.textMid, fontSize: 14, fontWeight: 700 }}>#{Math.max(1, Math.round((1200 - iq) * 0.8) + 1)}</div>
-              <div style={{ color: C.textSoft, fontSize: 9, letterSpacing: 1 }}>GLOBAL RANK</div>
-            </div>
-          </div>
-        </div>
 
-        <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: 10 }}>
-          <button
-            onClick={() => {
-              setPuzzleIdx((prev) => prev + 1);
-              setScreen("puzzle");
-            }}
+          <div
             style={{
+              marginTop: 24,
               width: "100%",
-              padding: "16px",
-              background: C.goldBtn,
-              border: `1px solid ${C.borderStrong}`,
-              borderRadius: 12,
-              cursor: "pointer",
-              color: C.textOnDark,
-              fontSize: 17,
-              fontWeight: 800,
-              letterSpacing: 3,
-              boxShadow: `0 6px 22px ${C.goldGlow}`,
-              fontFamily: "Georgia,serif",
+              flexShrink: 0,
             }}
           >
-            PLAY MIXED PUZZLES
-          </button>
-          <button
-            onClick={() => setScreen("categories")}
+            <div
+              style={{
+                position: "relative",
+                width: "100%",
+                background: `linear-gradient(172deg,#fffdf8,#f5ecd9 55%,${C.surface})`,
+                clipPath: `polygon(${statClip})`,
+                WebkitClipPath: `polygon(${statClip})`,
+                border: `1.5px solid ${C.borderStrong}`,
+                boxShadow: `${C.shadowCard}, inset 0 0 0 1px ${C.borderInner}`,
+                padding: "22px 20px",
+                display: "flex",
+                justifyContent: "space-around",
+                alignItems: "center",
+              }}
+            >
+              <IQGauge iq={iq} />
+              <div style={{ width: 1, height: 60, background: C.border }} />
+              <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ color: C.gold, fontSize: 22, fontWeight: 800 }}>{streak}🔥</div>
+                  <div style={{ color: C.textSoft, fontSize: 10, letterSpacing: 1 }}>STREAK</div>
+                </div>
+                <div style={{ textAlign: "center" }}>
+                  <div style={{ color: C.blue, fontSize: 22, fontWeight: 800 }}>{accuracy}%</div>
+                  <div style={{ color: C.textSoft, fontSize: 10, letterSpacing: 1 }}>ACCURACY</div>
+                </div>
+              </div>
+              <div style={{ width: 1, height: 60, background: C.border }} />
+              <div style={{ textAlign: "center" }}>
+                <div style={{ color: C.text, fontSize: 22, fontWeight: 800 }}>{totalAnswered}</div>
+                <div style={{ color: C.textSoft, fontSize: 10, letterSpacing: 1 }}>PUZZLES</div>
+                <div style={{ marginTop: 8 }}>
+                  <div style={{ color: C.textMid, fontSize: 14, fontWeight: 700 }}>
+                    #{Math.max(1, Math.round((1200 - iq) * 0.8) + 1)}
+                  </div>
+                  <div style={{ color: C.textSoft, fontSize: 9, letterSpacing: 1 }}>GLOBAL RANK</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div
             style={{
+              marginTop: 20,
               width: "100%",
-              padding: "12px",
-              background: C.accentWash,
-              border: `1.5px solid ${C.border}`,
-              borderRadius: 12,
-              cursor: "pointer",
-              color: C.textOnDark,
-              fontSize: 12,
-              fontWeight: 700,
-              letterSpacing: 2,
-              fontFamily: "Georgia,serif",
+              display: "flex",
+              flexDirection: "column",
+              gap: 10,
+              flexShrink: 0,
             }}
           >
-            CATEGORY PERFORMANCE
-          </button>
-          <button
-            onClick={() => setScreen("learn")}
+            <button
+              onClick={() => {
+                setPuzzleIdx((prev) => prev + 1);
+                setScreen("puzzle");
+              }}
+              style={{
+                width: "100%",
+                padding: "16px",
+                background: C.goldBtn,
+                border: `1px solid ${C.borderStrong}`,
+                borderRadius: 12,
+                cursor: "pointer",
+                color: C.textOnDark,
+                fontSize: 17,
+                fontWeight: 800,
+                letterSpacing: 3,
+                boxShadow: `0 6px 22px ${C.goldGlow}`,
+                fontFamily: "Georgia,serif",
+              }}
+            >
+              PLAY MIXED PUZZLES
+            </button>
+            <button
+              onClick={() => setScreen("categories")}
+              style={{
+                width: "100%",
+                padding: "12px",
+                background: C.accentWash,
+                border: `1.5px solid ${C.border}`,
+                borderRadius: 12,
+                cursor: "pointer",
+                color: C.textOnDark,
+                fontSize: 12,
+                fontWeight: 700,
+                letterSpacing: 2,
+                fontFamily: "Georgia,serif",
+              }}
+            >
+              CATEGORY PERFORMANCE
+            </button>
+            <button
+              onClick={() => setScreen("learn")}
+              style={{
+                width: "100%",
+                padding: "13px",
+                background: C.accentWash,
+                border: `1.5px solid ${C.border}`,
+                borderRadius: 12,
+                cursor: "pointer",
+                color: C.textOnDark,
+                fontSize: 13,
+                fontWeight: 600,
+                letterSpacing: 2,
+                fontFamily: "Georgia,serif",
+              }}
+            >
+              DICE NAMES GUIDE 🎲
+            </button>
+          </div>
+
+          {/* Absorbs extra height on tall phones; die keeps a clear footer band */}
+          <div className="home-footer-spacer" style={{ flex: 1, minHeight: 16, width: "100%" }} aria-hidden />
+
+          <div
+            className="home-die-footer"
             style={{
-              width: "100%",
-              padding: "13px",
-              background: C.accentWash,
-              border: `1.5px solid ${C.border}`,
-              borderRadius: 12,
-              cursor: "pointer",
-              color: C.textOnDark,
-              fontSize: 13,
-              fontWeight: 600,
-              letterSpacing: 2,
-              fontFamily: "Georgia,serif",
+              flexShrink: 0,
+              marginTop: "clamp(32px, 6vw, 48px)",
+              paddingBottom: "max(20px, calc(12px + env(safe-area-inset-bottom, 0px)))",
+              textAlign: "center",
             }}
           >
-            DICE NAMES GUIDE 🎲
-          </button>
+            <span style={{ fontSize: 52, lineHeight: 1, display: "inline-block" }} aria-hidden>
+              🎲
+            </span>
+          </div>
         </div>
       </div>
+
+      <style>{`
+        .home-inner {
+          max-width: 400px;
+        }
+        .home-hero-img {
+          width: min(260px, 86vw);
+          max-width: 100%;
+        }
+        @media (min-width: 768px) {
+          .home-inner {
+            max-width: min(440px, 92vw);
+          }
+          .home-hero-img {
+            width: min(280px, 42vw);
+          }
+        }
+      `}</style>
     </div>
   );
 }

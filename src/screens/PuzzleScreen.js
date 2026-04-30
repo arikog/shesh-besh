@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { C } from "../constants/palette";
 import { evaluatePosition } from "../engine/evaluator";
 import { applyMove } from "../game/moveEngine";
@@ -16,6 +16,20 @@ export default function PuzzleScreen(props) {
     sfxMuted, toggleSfxMuted,
   } = props;
   const recordedResultRef = useRef("");
+  const [narrowPortraitBoard, setNarrowPortraitBoard] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return undefined;
+    const mq = window.matchMedia("(max-width: 767.98px) and (orientation: portrait)");
+    const apply = () => setNarrowPortraitBoard(Boolean(mq.matches));
+    apply();
+    mq.addEventListener("change", apply);
+    window.addEventListener("resize", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      window.removeEventListener("resize", apply);
+    };
+  }, []);
 
   const lineBoard = (phase === "result" && resultBoard) ? resultBoard : (movesDone || []).reduce(
     (acc, move) => applyMove(acc, move.from, move.to),
@@ -36,6 +50,15 @@ export default function PuzzleScreen(props) {
   const yourWinPct = isValidPct(yourPositionEval.winPct) ? yourPositionEval.winPct : puzzle.yourWinPct;
   const bestWinPct = isValidPct(bestPositionEval.winPct) ? bestPositionEval.winPct : puzzle.bestWinPct;
   const displayedYourWinPct = isCorrect ? currentPct : yourWinPct;
+
+  const opponentBorneOff = useMemo(() => {
+    let blackOnBoard = 0;
+    for (let i = 0; i < lineBoard.length; i++) {
+      const v = lineBoard[i];
+      if (v < 0) blackOnBoard += -v;
+    }
+    return Math.min(15, Math.max(0, 15 - blackOnBoard));
+  }, [lineBoard]);
 
   useEffect(() => {
     if (process.env.NODE_ENV === "development" && phase === "result") {
@@ -225,7 +248,7 @@ export default function PuzzleScreen(props) {
       >
         <div className="puzzle-centered-col">
           <div
-            className="puzzle-board-mat"
+            className={`puzzle-board-mat${narrowPortraitBoard ? " puzzle-board-mat--narrow-portrait" : ""}`}
             style={{
               background: C.boardFelt,
               padding: "clamp(7px, 2vw, 12px)",
@@ -238,77 +261,183 @@ export default function PuzzleScreen(props) {
               gap: 0,
             }}
           >
-          <div className="puzzle-board-play-slot">
-            <div className="puzzle-board-aspect">
+          {narrowPortraitBoard && (
+            <div className="puzzle-bear-off-row puzzle-bear-off-row--opponent-top">
+              <div
+                style={{
+                  background: "rgba(25,14,12,0.28)",
+                  border: "max(2px, 0.24vw) dashed rgba(80,55,30,0.35)",
+                  borderRadius: "clamp(10px, 2.2vw, 16px)",
+                  padding: "clamp(6px, 1.8vw, 11px) clamp(10px, 2.6vw, 18px)",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "clamp(8px, 2vw, 14px)",
+                  cursor: "default",
+                }}
+              >
+                <div
+                  style={{
+                    display: "flex",
+                    flexWrap: "wrap",
+                    gap: "clamp(5px, 1.2vw, 10px)",
+                    flex: 1,
+                    minWidth: 0,
+                    minHeight: "clamp(18px, 4vw, 32px)",
+                  }}
+                >
+                  {Array.from({ length: Math.min(opponentBorneOff, 15) }).map((_, i) => (
+                    <div
+                      key={`op-${i}`}
+                      style={{
+                        width: "clamp(14px, calc((100%) / 26), 34px)",
+                        height: "clamp(14px, calc((100%) / 26), 34px)",
+                        borderRadius: "50%",
+                        flexShrink: 0,
+                        boxSizing: "border-box",
+                        background:
+                          "radial-gradient(circle at 38% 30%, #6B4020 0%, #3D1E08 45%, #1A0A02 85%, #0A0402 100%)",
+                        border: "max(1.5px, 0.12vw) solid #0A0402",
+                        boxShadow: "0 clamp(2px, 0.55vw, 8px) clamp(6px, 1.3vw, 14px) rgba(0,0,0,0.22)",
+                      }}
+                    />
+                  ))}
+                  {opponentBorneOff === 0 && (
+                    <div
+                      style={{
+                        color: "rgba(60,40,20,0.35)",
+                        fontSize: "clamp(10px, 2.8vw, 14px)",
+                        fontStyle: "italic",
+                        lineHeight: "clamp(18px, 4vw, 32px)",
+                      }}
+                    >
+                      Black bear-off
+                    </div>
+                  )}
+                </div>
+                <div style={{ textAlign: "right", flexShrink: 0 }}>
+                  <div
+                    style={{
+                      color: "rgba(60,40,20,0.48)",
+                      fontSize: "clamp(8px, 2.1vw, 11px)",
+                      fontWeight: 800,
+                      letterSpacing: 1,
+                    }}
+                  >
+                    BLACK BORNE
+                  </div>
+                  <div
+                    style={{
+                      color: "rgba(60,40,20,0.52)",
+                      fontSize: "clamp(14px, 4vw, 22px)",
+                      fontWeight: 800,
+                      marginTop: 1,
+                    }}
+                  >
+                    {opponentBorneOff} / 15
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div
+            className={`puzzle-board-play-slot${narrowPortraitBoard ? " puzzle-board-play-slot--narrow-portrait" : ""}`}
+          >
+            <div
+              className={`puzzle-board-aspect${narrowPortraitBoard ? " puzzle-board-aspect--narrow-portrait-spin" : ""}`}
+            >
               <FlatBoard
-                board={liveBoard||puzzle.board}
+                board={liveBoard || puzzle.board}
                 selected={selected}
                 legalDests={legalDests}
                 onPointClick={handlePointClick}
-                onBearOff={handleBearOff}
-                borneOff={borneOff}
                 dice={[puzzle.dice[0], puzzle.dice[1]]}
                 diceUsed={diceUsedFlags}
                 wrongFlashPoint={wrongFlash}
+                rotatedPortrait={narrowPortraitBoard}
               />
             </div>
           </div>
 
-          {/* Bear-off — width tracks mat (same width as board); safe-area padding compact-only */}
-          <div className="puzzle-bear-off-row">
+          <div
+            className={`puzzle-bear-off-row${narrowPortraitBoard ? " puzzle-bear-off-row--player-bottom" : ""}`}
+          >
             <div
               onClick={canBearOffFromState ? handleBearOff : undefined}
               style={{
-                background: canBearOffFromState ? C.accentWashBold : 'rgba(80,55,30,0.1)',
-                border: canBearOffFromState ? 'max(2px, 0.24vw) solid rgba(212,169,58,0.75)' : 'max(2px, 0.24vw) dashed rgba(80,55,30,0.28)',
-                borderRadius:"clamp(10px, 2.2vw, 16px)",
-                padding:"clamp(8px, 2.2vw, 14px) clamp(10px, 2.6vw, 18px)",
-                display:'flex', alignItems:'center', gap:"clamp(8px, 2vw, 14px)",
-                cursor: canBearOffFromState ? 'pointer' : 'default',
-                animation: canBearOffFromState ? 'trayPulse 1.2s ease-in-out infinite' : 'none',
+                background: canBearOffFromState ? C.accentWashBold : "rgba(80,55,30,0.1)",
+                border: canBearOffFromState
+                  ? "max(2px, 0.24vw) solid rgba(212,169,58,0.75)"
+                  : "max(2px, 0.24vw) dashed rgba(80,55,30,0.28)",
+                borderRadius: "clamp(10px, 2.2vw, 16px)",
+                padding: "clamp(8px, 2.2vw, 14px) clamp(10px, 2.6vw, 18px)",
+                display: "flex",
+                alignItems: "center",
+                gap: "clamp(8px, 2vw, 14px)",
+                cursor: canBearOffFromState ? "pointer" : "default",
+                animation: canBearOffFromState ? "trayPulse 1.2s ease-in-out infinite" : "none",
               }}
             >
-              <div style={{
-                display:'flex', flexWrap:'wrap',
-                gap:"clamp(5px, 1.2vw, 10px)",
-                flex:1,
-                minWidth:0,
-                minHeight:"clamp(20px, 5vw, 36px)",
-              }}>
-                {Array.from({length:Math.min(borneOff,15)}).map((_,i)=>(
-                  <div key={i} style={{
-                    width:"clamp(14px, calc((100%) / 26), 34px)",
-                    height:"clamp(14px, calc((100%) / 26), 34px)",
-                    borderRadius:'50%',
-                    flexShrink:0,
-                    boxSizing:'border-box',
-                    background:'radial-gradient(circle at 38% 30%,#FFFFFF 0%,#F4EBD6 35%,#D4C2A0 75%,#A09070 100%)',
-                    border:"max(1.5px, 0.12vw) solid #A08B60",
-                    boxShadow:"0 clamp(2px, 0.55vw, 8px) clamp(6px, 1.3vw, 14px) rgba(0,0,0,0.22)",
-                  }}/>
+              <div
+                style={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: "clamp(5px, 1.2vw, 10px)",
+                  flex: 1,
+                  minWidth: 0,
+                  minHeight: "clamp(20px, 5vw, 36px)",
+                }}
+              >
+                {Array.from({ length: Math.min(borneOff, 15) }).map((_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      width: "clamp(14px, calc((100%) / 26), 34px)",
+                      height: "clamp(14px, calc((100%) / 26), 34px)",
+                      borderRadius: "50%",
+                      flexShrink: 0,
+                      boxSizing: "border-box",
+                      background:
+                        "radial-gradient(circle at 38% 30%,#FFFFFF 0%,#F4EBD6 35%,#D4C2A0 75%,#A09070 100%)",
+                      border: "max(1.5px, 0.12vw) solid #A08B60",
+                      boxShadow: "0 clamp(2px, 0.55vw, 8px) clamp(6px, 1.3vw, 14px) rgba(0,0,0,0.22)",
+                    }}
+                  />
                 ))}
-                {borneOff===0 && (
-                  <div style={{
-                    color:'rgba(60,40,20,0.35)',
-                    fontSize:"clamp(11px, 3.2vw, 15px)",
-                    fontStyle:'italic',
-                    lineHeight:"clamp(20px, 5vw, 36px)",
-                  }}>
+                {borneOff === 0 && (
+                  <div
+                    style={{
+                      color: "rgba(60,40,20,0.35)",
+                      fontSize: "clamp(11px, 3.2vw, 15px)",
+                      fontStyle: "italic",
+                      lineHeight: "clamp(20px, 5vw, 36px)",
+                    }}
+                  >
                     Bear off pocket
                   </div>
                 )}
               </div>
-              <div style={{textAlign:'right', flexShrink:0}}>
-                <div style={{
-                  color: canBearOffFromState ? C.accent : 'rgba(60,40,20,0.48)',
-                  fontSize:"clamp(9px, 2.25vw, 12px)", fontWeight:800, letterSpacing:1,
-                }}>
-                  {canBearOffFromState ? 'TAP TO BEAR OFF' : 'BORNE OFF'}
+              <div style={{ textAlign: "right", flexShrink: 0 }}>
+                <div
+                  style={{
+                    color: canBearOffFromState ? C.accent : "rgba(60,40,20,0.48)",
+                    fontSize: "clamp(9px, 2.25vw, 12px)",
+                    fontWeight: 800,
+                    letterSpacing: 1,
+                  }}
+                >
+                  {canBearOffFromState ? "TAP TO BEAR OFF" : "BORNE OFF"}
                 </div>
-                <div style={{
-                  color: canBearOffFromState ? C.accent : 'rgba(60,40,20,0.52)',
-                  fontSize:"clamp(15px, 4.75vw, 24px)", fontWeight:800, marginTop:1,
-                }}>{borneOff} / 15</div>
+                <div
+                  style={{
+                    color: canBearOffFromState ? C.accent : "rgba(60,40,20,0.52)",
+                    fontSize: "clamp(15px, 4.75vw, 24px)",
+                    fontWeight: 800,
+                    marginTop: 1,
+                  }}
+                >
+                  {borneOff} / 15
+                </div>
               </div>
             </div>
           </div>
@@ -492,13 +621,55 @@ export default function PuzzleScreen(props) {
             overflow: hidden;
           }
 
-          .puzzle-bear-off-row {
+          .puzzle-bear-off-row:not(.puzzle-bear-off-row--opponent-top) {
             padding-bottom: max(env(safe-area-inset-bottom, 0px), 10px);
           }
 
           .puzzle-bottom-safe-pad {
             display: none !important;
             height: 0 !important;
+          }
+        }
+
+        /*
+         * Phone portrait — spin board −90° so wide layout maps to tall viewport (major BG apps convention).
+         * iPad portrait (≥768 css px) skips this breakpoint; phones in landscape skip via orientation query.
+         */
+        @media (max-width: 767.98px) and (orientation: portrait) {
+          .puzzle-board-mat--narrow-portrait {
+            padding-inline: clamp(4px, 1.5vw, 9px);
+            padding-top: clamp(4px, 1vw, 8px);
+            padding-bottom: 0;
+          }
+
+          .puzzle-bear-off-row--opponent-top {
+            padding-top: clamp(4px, 1vw, 8px);
+            padding-bottom: 4px;
+            flex-shrink: 0;
+          }
+
+          .puzzle-board-play-slot.puzzle-board-play-slot--narrow-portrait {
+            position: relative;
+            overflow: hidden;
+            align-items: stretch !important;
+            justify-content: flex-start !important;
+            flex: 1 1 auto !important;
+            min-height: 0 !important;
+          }
+
+          .puzzle-board-aspect.puzzle-board-aspect--narrow-portrait-spin {
+            box-sizing: border-box;
+            position: absolute !important;
+            left: 50% !important;
+            top: 50% !important;
+            width: min(100cqh, calc(100cqw * 3 / 2)) !important;
+            aspect-ratio: 3 / 2 !important;
+            max-height: none !important;
+            height: auto !important;
+            flex-shrink: 0 !important;
+            margin-inline: unset !important;
+            transform: translate(-50%, -50%) rotate(-90deg);
+            overflow: hidden;
           }
         }
       `}</style>
