@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { diceLabel } from "./constants/dice";
 import { PUZZLES } from "./data/puzzles";
 import { evaluatePosition } from "./engine/evaluator";
@@ -7,6 +7,16 @@ import HomeScreen from "./screens/HomeScreen";
 import LearnScreen from "./screens/LearnScreen";
 import PuzzleScreen from "./screens/PuzzleScreen";
 import CategoryBrowserScreen from "./screens/CategoryBrowserScreen";
+import IntroSplash from "./components/IntroSplash";
+import {
+  playAdvancePuzzle,
+  playDiceRoll,
+  playCheckerMove,
+  syncSfxMutedState,
+  getInitialSfxMuted,
+  warmupSfx,
+  tryResumeAudioContext,
+} from "./audio/puzzleSfx";
 import { recordPuzzleAttempt } from "./storage/progress";
 
 export default function SheshBesh() {
@@ -36,10 +46,24 @@ export default function SheshBesh() {
   const [currentPct, setCurrentPct] = useState(50);
   const [completedPuzzleIds, setCompletedPuzzleIds] = useState([]);
   const [history, setHistory] = useState([]);
+  const [sfxMuted, setSfxMuted] = useState(getInitialSfxMuted);
+  const [showIntroSplash, setShowIntroSplash] = useState(true);
 
   const puzzle  = PUZZLES[puzzleIdx%PUZZLES.length];
   const label   = diceLabel(puzzle.dice[0],puzzle.dice[1]);
   const iqDelta = puzzle.difficulty==="Advanced"?18:puzzle.difficulty==="Intermediate"?12:8;
+
+  /** Roll dice SFX whenever puzzle view gains focus or puzzle index advances */
+  const puzzleNavRef = useRef({ screen: undefined, puzzleIdx: undefined });
+  useEffect(() => {
+    const wasPuzzle = puzzleNavRef.current.screen === "puzzle";
+    const prevIdx = puzzleNavRef.current.puzzleIdx;
+    const nowPuzzle = screen === "puzzle";
+    if (nowPuzzle && (!wasPuzzle || puzzleIdx !== prevIdx)) {
+      playDiceRoll();
+    }
+    puzzleNavRef.current = { screen, puzzleIdx };
+  }, [screen, puzzleIdx]);
 
   function initPuzzle(p) {
     const dice=p.dice[0]===p.dice[1]?[p.dice[0],p.dice[0],p.dice[0],p.dice[0]]:[...p.dice];
@@ -60,6 +84,33 @@ export default function SheshBesh() {
     setCurrentPct(startPct);
   }
   useEffect(()=>{ initPuzzle(PUZZLES[puzzleIdx%PUZZLES.length]); },[puzzleIdx]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    warmupSfx();
+  }, []);
+
+  useEffect(() => {
+    syncSfxMutedState(sfxMuted);
+  }, [sfxMuted]);
+
+  function toggleSfxMuted() {
+    setSfxMuted((m) => {
+      const next = !m;
+      if (!next) tryResumeAudioContext();
+      return next;
+    });
+  }
+
+  function withSplash(node) {
+    return (
+      <>
+        {node}
+        {showIntroSplash && (
+          <IntroSplash onDone={() => setShowIntroSplash(false)} />
+        )}
+      </>
+    );
+  }
 
   function hydrateProgress(saved) {
     if (!saved) return;
@@ -136,6 +187,7 @@ export default function SheshBesh() {
     setLiveBoard(nb); setDiceLeft(nd);
     setMovesDone(attempted);
     if (to===-1) setBorneOff(n=>n+1);
+    playCheckerMove();
     setSelected(null); setLegalDests([]);
 
     if (attempted.length === puzzle.bestMoves.length) {
@@ -176,9 +228,11 @@ export default function SheshBesh() {
     setPopupOpen(false);
     setResultBoard(null);
     setResultIqDelta(0);
+    playDiceRoll();
   }
 
   function handleNextPuzzle(){
+    playAdvancePuzzle();
     if (!isCorrect) {
       setTotalAnswered(a=>a+1);
       setStreak(0);
@@ -216,7 +270,7 @@ export default function SheshBesh() {
   }
 
   if (screen === "home") {
-    return (
+    return withSplash(
       <HomeScreen
         showWelcome={showWelcome}
         setShowWelcome={setShowWelcome}
@@ -232,11 +286,11 @@ export default function SheshBesh() {
   }
 
   if (screen === "learn") {
-    return <LearnScreen setScreen={setScreen} />;
+    return withSplash(<LearnScreen setScreen={setScreen} />);
   }
 
   if (screen === "categories") {
-    return (
+    return withSplash(
       <CategoryBrowserScreen
         setScreen={setScreen}
         completedPuzzleIds={completedPuzzleIds}
@@ -245,7 +299,7 @@ export default function SheshBesh() {
     );
   }
 
-  return (
+  return withSplash(
     <PuzzleScreen
       setScreen={setScreen}
       handleHint={handleHint}
@@ -279,6 +333,8 @@ export default function SheshBesh() {
       handleRetry={handleRetry}
       attempts={attempts}
       iqDelta={iqDelta}
+      sfxMuted={sfxMuted}
+      toggleSfxMuted={toggleSfxMuted}
     />
   );
 }

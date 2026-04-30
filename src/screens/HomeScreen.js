@@ -27,7 +27,7 @@ export default function HomeScreen({
         <div style={{textAlign:"center"}}>
           <div style={{fontSize:52,marginBottom:4}}>🎲</div>
           <div style={{fontSize:38,fontWeight:900,letterSpacing:4,color:C.gold,fontFamily:"Georgia,serif"}}>SHESH BESH</div>
-          <div style={{color:"#B07010",fontSize:16,letterSpacing:6,marginTop:2}}>Նարդի</div>
+          <div dir="rtl" lang="he" style={{color:"#B07010",fontSize:16,letterSpacing:6,marginTop:2,fontFamily:"'Noto Sans Hebrew','Segoe UI',Helvetica,Arial,sans-serif"}}>שש בש</div>
         </div>
         <div style={{background:C.card,border:`1.5px solid ${C.border}`,borderRadius:16,padding:"20px 24px",width:"100%",display:"flex",justifyContent:"space-around",alignItems:"center",boxShadow:"0 4px 20px rgba(44,26,10,0.12)"}}>
           <IQGauge iq={iq}/>

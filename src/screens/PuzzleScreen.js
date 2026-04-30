@@ -13,6 +13,7 @@ export default function PuzzleScreen(props) {
     liveBoard, movesDone, resultBoard, selected, legalDests, handlePointClick, handleBearOff, borneOff, diceUsedFlags, wrongFlash,
     canBearOffFromState, phase, popupOpen, setPopupOpen, setPhase, isCorrect, handleNextPuzzle, handleRetry, attempts,
     iqDelta, resultIqDelta, onRecordPuzzleAttempt,
+    sfxMuted, toggleSfxMuted,
   } = props;
   const recordedResultRef = useRef("");
 
@@ -122,19 +123,52 @@ export default function PuzzleScreen(props) {
           </div>
         </div>
 
-        <button onClick={handleHint} style={{
-          width:46, height:46, borderRadius:"50%",
-          background:"#8B7355",
-          border:"1px solid rgba(60,40,20,0.3)",
-          cursor:"pointer",
-          display:"flex", alignItems:"center", justifyContent:"center",
-          boxShadow:"0 2px 6px rgba(0,0,0,0.15)",
-          padding:0, flexShrink:0,
-        }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
-          </svg>
-        </button>
+        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+          <button
+            type="button"
+            onClick={toggleSfxMuted}
+            title={sfxMuted ? "Turn sound on" : "Mute sound"}
+            aria-label={sfxMuted ? "Unmute sound effects" : "Mute sound effects"}
+            aria-pressed={sfxMuted}
+            style={{
+              width:46, height:46, borderRadius:"50%",
+              background:sfxMuted ? "#A89880" : "#7A9882",
+              border:"1px solid rgba(60,40,20,0.28)",
+              cursor:"pointer",
+              display:"flex", alignItems:"center", justifyContent:"center",
+              boxShadow:"0 2px 6px rgba(0,0,0,0.12)",
+              padding:0,
+            }}
+          >
+            {sfxMuted ? (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <line x1="23" y1="9" x2="17" y2="15" />
+                <line x1="17" y1="9" x2="23" y2="15" />
+              </svg>
+            ) : (
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+                <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
+                <path d="M14.5 9 q2 3 0 6" fill="none" />
+                <path d="M16.5 6 q3.2 6 0 12" fill="none" />
+              </svg>
+            )}
+          </button>
+
+          <button type="button" onClick={handleHint} aria-label="Show hint" style={{
+            width:46, height:46, borderRadius:"50%",
+            background:"#8B7355",
+            border:"1px solid rgba(60,40,20,0.3)",
+            cursor:"pointer",
+            display:"flex", alignItems:"center", justifyContent:"center",
+            boxShadow:"0 2px 6px rgba(0,0,0,0.15)",
+            padding:0, flexShrink:0,
+          }}>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
+            </svg>
+          </button>
+        </div>
       </div>
 
       {/* Puzzle info — centered below stats */}
@@ -169,66 +203,110 @@ export default function PuzzleScreen(props) {
         <EvalBar pct={currentPct} delta={deltaPct}/>
       </div>
 
-      {/* THE BOARD — fills the remaining middle space */}
+      {/* THE BOARD — max width / aspect-ratio on desktop, scroll on short viewports */}
       <div style={{
         flex:1,
         minHeight:0,
-        display:"flex", flexDirection:"column",
-        position:"relative",
+        overflowY:"auto",
+        overflowX:"hidden",
+        WebkitOverflowScrolling:"touch",
+        display:"flex",
+        flexDirection:"column",
+        justifyContent:"center",
+        alignItems:"center",
+        width:"100%",
+        paddingLeft:"clamp(12px, 2vw, 36px)",
+        paddingRight:"clamp(12px, 2vw, 36px)",
+        paddingTop:"clamp(4px, 0.6vh, 10px)",
+        boxSizing:"border-box",
       }}>
-        <FlatBoard
-          board={liveBoard||puzzle.board}
-          selected={selected}
-          legalDests={legalDests}
-          onPointClick={handlePointClick}
-          onBearOff={handleBearOff}
-          borneOff={borneOff}
-          dice={[puzzle.dice[0], puzzle.dice[1]]}
-          diceUsed={diceUsedFlags}
-          wrongFlashPoint={wrongFlash}
-        />
-      </div>
-
-      {/* Single bear-off pocket below the board (older design) */}
-      <div style={{padding:"8px 14px 14px", flexShrink:0}}>
-        <div
-          onClick={canBearOffFromState ? handleBearOff : undefined}
-          style={{
-            background: canBearOffFromState ? 'rgba(212,160,23,0.15)' : 'rgba(120,85,50,0.12)',
-            border: canBearOffFromState ? '2px solid rgba(212,160,23,0.7)' : '2px dashed rgba(80,55,30,0.25)',
-            borderRadius:12,
-            padding:'10px 14px',
-            display:'flex', alignItems:'center', gap:10,
-            cursor: canBearOffFromState ? 'pointer' : 'default',
-            animation: canBearOffFromState ? 'trayPulse 1.2s ease-in-out infinite' : 'none',
-          }}
-        >
-          <div style={{display:'flex', flexWrap:'wrap', gap:4, flex:1, minHeight:22}}>
-            {Array.from({length:Math.min(borneOff,15)}).map((_,i)=>(
-              <div key={i} style={{
-                width:20, height:20, borderRadius:'50%',
-                background:'radial-gradient(circle at 38% 30%,#FFFFFF 0%,#F4EBD6 35%,#D4C2A0 75%,#A09070 100%)',
-                border:'1.5px solid #A08B60',
-                boxShadow:'0 1px 3px rgba(0,0,0,0.25)',
-              }}/>
-            ))}
-            {borneOff===0 && (
-              <div style={{color:'rgba(60,40,20,0.35)', fontSize:12, fontStyle:'italic', lineHeight:'22px'}}>
-                Bear off pocket
-              </div>
-            )}
+        <div style={{
+          width:"100%",
+          maxWidth:1100,
+          margin:"0 auto",
+          flexShrink:0,
+          display:"flex",
+          flexDirection:"column",
+          alignItems:"stretch",
+          containerType:"size",
+          containerName:"playfield",
+          gap:"clamp(10px, min(3cqw, 2cqh), 22px)",
+        }}>
+          <div style={{
+            width:"100%",
+            aspectRatio:"3 / 2",
+            flexShrink:0,
+            minHeight:0,
+          }}>
+            <FlatBoard
+              board={liveBoard||puzzle.board}
+              selected={selected}
+              legalDests={legalDests}
+              onPointClick={handlePointClick}
+              onBearOff={handleBearOff}
+              borneOff={borneOff}
+              dice={[puzzle.dice[0], puzzle.dice[1]]}
+              diceUsed={diceUsedFlags}
+              wrongFlashPoint={wrongFlash}
+            />
           </div>
-          <div style={{textAlign:'right'}}>
-            <div style={{
-              color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.45)',
-              fontSize:10, fontWeight:800, letterSpacing:1,
-            }}>
-              {canBearOffFromState ? 'TAP TO BEAR OFF' : 'BORNE OFF'}
+
+          {/* Bear-off pocket — discs scale with playfield container width */}
+          <div style={{padding:"0 0 clamp(8px, 1.8cqw, 16px)", flexShrink:0}}>
+            <div
+              onClick={canBearOffFromState ? handleBearOff : undefined}
+              style={{
+                background: canBearOffFromState ? 'rgba(212,160,23,0.15)' : 'rgba(120,85,50,0.12)',
+                border: canBearOffFromState ? 'max(2px, 0.24cqw) solid rgba(212,160,23,0.7)' : 'max(2px, 0.24cqw) dashed rgba(80,55,30,0.25)',
+                borderRadius:"clamp(10px, 1.1cqw, 16px)",
+                padding:"clamp(8px, 1cqw, 14px) clamp(10px, 1.35cqw, 18px)",
+                display:'flex', alignItems:'center', gap:"clamp(8px, 1.2cqw, 14px)",
+                cursor: canBearOffFromState ? 'pointer' : 'default',
+                animation: canBearOffFromState ? 'trayPulse 1.2s ease-in-out infinite' : 'none',
+              }}
+            >
+              <div style={{
+                display:'flex', flexWrap:'wrap',
+                gap:"clamp(5px, 0.7cqw, 10px)",
+                flex:1,
+                minHeight:"clamp(20px, 3.8cqw, 36px)",
+              }}>
+                {Array.from({length:Math.min(borneOff,15)}).map((_,i)=>(
+                  <div key={i} style={{
+                    width:"clamp(14px, calc(100cqw / 26), 34px)",
+                    height:"clamp(14px, calc(100cqw / 26), 34px)",
+                    borderRadius:'50%',
+                    flexShrink:0,
+                    boxSizing:'border-box',
+                    background:'radial-gradient(circle at 38% 30%,#FFFFFF 0%,#F4EBD6 35%,#D4C2A0 75%,#A09070 100%)',
+                    border:"max(1.5px, 0.12cqw) solid #A08B60",
+                    boxShadow:"0 clamp(2px, 0.22cqw, 8px) clamp(6px, 0.55cqw, 14px) rgba(0,0,0,0.22)",
+                  }}/>
+                ))}
+                {borneOff===0 && (
+                  <div style={{
+                    color:'rgba(60,40,20,0.35)',
+                    fontSize:"clamp(11px, 2.85cqw, 15px)",
+                    fontStyle:'italic',
+                    lineHeight:"clamp(20px, 3.8cqw, 36px)",
+                  }}>
+                    Bear off pocket
+                  </div>
+                )}
+              </div>
+              <div style={{textAlign:'right', flexShrink:0}}>
+                <div style={{
+                  color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.45)',
+                  fontSize:"clamp(9px, 2.05cqw, 12px)", fontWeight:800, letterSpacing:1,
+                }}>
+                  {canBearOffFromState ? 'TAP TO BEAR OFF' : 'BORNE OFF'}
+                </div>
+                <div style={{
+                  color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.5)',
+                  fontSize:"clamp(15px, 4.55cqw, 24px)", fontWeight:800, marginTop:1,
+                }}>{borneOff} / 15</div>
+              </div>
             </div>
-            <div style={{
-              color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.5)',
-              fontSize:18, fontWeight:800, marginTop:1,
-            }}>{borneOff} / 15</div>
           </div>
         </div>
       </div>
@@ -246,6 +324,7 @@ export default function PuzzleScreen(props) {
           from { opacity:0; transform:translate(-50%, 20px); }
           to   { opacity:1; transform:translate(-50%, 0); }
         }
+        @keyframes trayPulse{0%,100%{border-color:rgba(212,160,23,0.5)}50%{border-color:rgba(212,160,23,0.95)}}
       `}</style>
 
       {/* Minimal draggable popup */}
