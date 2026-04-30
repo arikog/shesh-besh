@@ -3,7 +3,7 @@ import { C } from "../constants/palette";
 export default function EvalBar({ pct, delta }) {
   const edge = C.border;
   return (
-    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, width: "100%", padding: "0 14px" }}>
+    <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 3, width: "100%", padding: 0 }}>
       <div
         style={{
           fontSize: 13,

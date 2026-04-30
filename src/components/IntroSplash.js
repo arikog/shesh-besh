@@ -47,11 +47,17 @@ export default function IntroSplash({ onDone }) {
     .filter(Boolean)
     .join(" ");
 
+  function consumeTapDismissTransitionEnd(e) {
+    if (!tapSkip || finished.current || e.propertyName !== "opacity") return;
+    if (e.target !== e.currentTarget) return;
+    finish();
+  }
+
   return (
     <div
       data-intro-splash
       role="button"
-      tabIndex={0}
+      tabIndex={tapSkip ? -1 : 0}
       aria-label="Skip intro"
       onPointerDown={(e) => {
         if (reduceMotion || tapSkip) return;
@@ -82,6 +88,7 @@ export default function IntroSplash({ onDone }) {
         boxSizing: "border-box",
       }}
       className={rootClass || undefined}
+      onTransitionEnd={consumeTapDismissTransitionEnd}
     >
       <style>{`
         @keyframes splashCoffeeArt {
@@ -228,6 +235,8 @@ export default function IntroSplash({ onDone }) {
         [data-intro-splash].intro-splash--tap {
           opacity: 0;
           transition: opacity 0.28s ease;
+          /* Invisible layer must not swallow clicks toward the landing / modal below */
+          pointer-events: none;
         }
 
         [data-intro-splash].intro-splash--tap .intro-splash__art,

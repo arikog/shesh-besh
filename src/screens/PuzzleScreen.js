@@ -77,8 +77,10 @@ export default function PuzzleScreen(props) {
       <div style={{height:"env(safe-area-inset-top, 12px)", flexShrink:0, minHeight:8}}/>
 
       {/* Top row: menu (left) · centered stats pill · hint (right) */}
-      <div style={{
-        padding:"2px 12px 4px",
+      <div className="puzzle-chrome puzzle-chrome--top"
+        style={{
+        paddingTop: 2,
+        paddingBottom: 4,
         display:"flex",
         alignItems:"center",
         gap:10,
@@ -173,8 +175,10 @@ export default function PuzzleScreen(props) {
       </div>
 
       {/* Puzzle info — centered below stats */}
-      <div style={{
-        padding:"0 12px 2px",
+      <div className="puzzle-chrome puzzle-chrome--title"
+        style={{
+        paddingTop: 0,
+        paddingBottom: 2,
         display:"flex",
         flexDirection:"column",
         alignItems:"center",
@@ -201,7 +205,7 @@ export default function PuzzleScreen(props) {
       </div>
 
       {/* Eval bar — tight spacing (~24–32px to board edge on desktop via CSS vars) */}
-      <div style={{padding:"2px 12px 4px", flexShrink:0}}>
+      <div className="puzzle-chrome puzzle-chrome--eval" style={{paddingTop: 2, paddingBottom: 4, flexShrink:0}}>
         <EvalBar pct={currentPct} delta={deltaPct}/>
       </div>
 
@@ -212,8 +216,6 @@ export default function PuzzleScreen(props) {
           flex: 1,
           minHeight: 0,
           width: "100%",
-          paddingLeft: "clamp(12px, 2vw, 36px)",
-          paddingRight: "clamp(12px, 2vw, 36px)",
           paddingTop: 14,
           paddingBottom: 10,
           boxSizing: "border-box",
@@ -224,7 +226,6 @@ export default function PuzzleScreen(props) {
             className="puzzle-board-mat"
             style={{
               background: C.boardFelt,
-              borderRadius: "clamp(10px, 2vw, 20px)",
               padding: "clamp(7px, 2vw, 12px)",
               border: `1px solid rgba(212, 169, 58, 0.32)`,
               boxShadow: "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.18)",
@@ -330,6 +331,11 @@ export default function PuzzleScreen(props) {
         }
         @keyframes trayPulse{0%,100%{border-color:rgba(212,169,58,0.55)}50%{border-color:rgba(212,169,58,0.95)}}
 
+        /* Header / eval rows: comfy inset on phones; overridden below for horizontal padding only */
+        .puzzle-chrome {
+          box-sizing: border-box;
+        }
+
         .puzzle-play-area {
           flex: 1;
           min-height: 0;
@@ -338,6 +344,12 @@ export default function PuzzleScreen(props) {
           flex-direction: column;
           align-items: center;
           justify-content: flex-start;
+          padding-left: clamp(12px, 2vw, 36px);
+          padding-right: clamp(12px, 2vw, 36px);
+        }
+
+        .puzzle-board-mat {
+          border-radius: clamp(10px, 2vw, 20px);
         }
 
         /* Column that holds mat; width tracks min(1100, pane); desktop height capped to pane */
@@ -348,6 +360,13 @@ export default function PuzzleScreen(props) {
           max-height: 100cqh;
           display: flex;
           flex-direction: column;
+        }
+
+        .puzzle-chrome.puzzle-chrome--top,
+        .puzzle-chrome.puzzle-chrome--title,
+        .puzzle-chrome.puzzle-chrome--eval {
+          padding-left: clamp(12px, 2vw, 36px);
+          padding-right: clamp(12px, 2vw, 36px);
         }
 
         @media (min-width: 768px) {
@@ -375,15 +394,34 @@ export default function PuzzleScreen(props) {
         }
 
         @media (max-width: 767.98px) {
+          .puzzle-chrome.puzzle-chrome--top,
+          .puzzle-chrome.puzzle-chrome--title,
+          .puzzle-chrome.puzzle-chrome--eval {
+            padding-left: max(16px, env(safe-area-inset-left, 0px));
+            padding-right: max(16px, env(safe-area-inset-right, 0px));
+          }
+
           .puzzle-play-area {
             overflow-x: hidden;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
+            align-items: stretch;
+            padding-left: 0;
+            padding-right: 0;
+            width: 100%;
           }
 
           .puzzle-centered-col {
-            width: min(1100px, 95cqw);
+            width: 100%;
+            max-width: none;
+            margin-left: 0;
+            margin-right: 0;
+            align-self: stretch;
             max-height: none;
+          }
+
+          .puzzle-board-mat {
+            border-radius: 0;
           }
 
           .puzzle-board-aspect {

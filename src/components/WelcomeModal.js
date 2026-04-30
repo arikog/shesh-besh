@@ -21,22 +21,34 @@ export default function WelcomeModal({ onClose }) {
         padding: 20,
         backdropFilter: "blur(8px)",
       }}
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
     >
       <div
         style={{
           maxWidth: 360,
           width: "100%",
+          position: "relative",
+          zIndex: 1,
+          isolation: "isolate",
           background: `linear-gradient(168deg,#fffdf9 0%,${C.surface} 55%,${C.surface})`,
           border: `2px solid ${C.borderStrong}`,
           borderRadius: 20,
           padding: "32px 24px",
           boxShadow: `0 24px 88px rgba(0,0,0,0.55), inset 0 0 0 1px ${C.borderInner}`,
           animation: "slideUp2 0.5s cubic-bezier(0.34,1.56,0.64,1)",
+          WebkitTapHighlightColor: "transparent",
         }}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="welcome-title"
+        onClick={(e) => e.stopPropagation()}
       >
         <div style={{ textAlign: "center", marginBottom: 16 }}>
           <div style={{ fontSize: 50, marginBottom: 6 }}>🎲</div>
           <div
+            id="welcome-title"
             style={{
               fontSize: 34,
               fontWeight: 900,
