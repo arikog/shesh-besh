@@ -1,3 +1,5 @@
+import { C } from "../constants/palette";
+
 export default function PashaAlert({ isCorrect, onClick }) {
   return (
     <button
@@ -9,7 +11,7 @@ export default function PashaAlert({ isCorrect, onClick }) {
         transform:"translateX(-50%)",
         padding:"12px 24px",
         background: isCorrect ? "#4a8f3f" : "#c94a3d",
-        color:"#FDF6E3",
+        color: C.textOnDark,
         border:"none",
         borderRadius:24,
         fontSize:14, fontWeight:800, letterSpacing:2,

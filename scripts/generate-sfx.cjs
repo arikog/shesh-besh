@@ -73,23 +73,69 @@ function genButtonClick() {
   return out;
 }
 
-/** Subtle tabletop tumble — short noise + softened micro-clicks, lower amplitude than checker. */
+/**
+ * Scene-setting tabletop dice (~0.75s): hand/shake tumble → wood-tone clacks → decay.
+ * Synth only (license-free); replace public/sounds/dice-roll.{wav,mp3} with sourced Foley if desired.
+ */
 function genDiceRoll() {
-  const dur = 0.19;
+  const dur = 0.78;
   const len = Math.floor(SAMPLE_RATE * dur);
   const out = new Float32Array(len);
+
+  /** Short wooden “clack” impulse */
+  function addImpulse(i0, amplitude, decayHz, barkHz, seedOff) {
+    const span = Math.min(len - i0, Math.floor(SAMPLE_RATE * 0.045));
+    for (let k = 0; k < span; k++) {
+      const i = i0 + k;
+      if (i >= len) break;
+      const tt = k / SAMPLE_RATE;
+      const e = Math.exp(-decayHz * tt);
+      const thump = Math.sin(2 * Math.PI * barkHz * tt + seedOff) * amplitude * e;
+      const tic = Math.sin(2 * Math.PI * (barkHz * 4.7 + 80) * tt) * amplitude * 0.35 * e;
+      const n = (deterministicNoise(40.22 + seedOff, i) * 2 - 1) * amplitude * 0.09 * e;
+      out[i] += thump + tic + n;
+    }
+  }
+
   for (let i = 0; i < len; i++) {
     const t = i / SAMPLE_RATE;
     const rel = i / Math.max(len - 1, 1);
+    const fadeIn = Math.min(1, t / 0.04);
     const shell = Math.sin(Math.PI * rel);
-    const env = shell ** 1.05 * Math.exp(-5.8 * t);
-    const grain = (deterministicNoise(9.331, i) * 2 - 1) * 0.1 * env;
-    const scuff = Math.sin(2 * Math.PI * (580 + 160 * deterministicNoise(1.71, Math.floor(i / 42))) * t)
-      * 0.065 * env;
-    const tickBurst = Math.sin(2 * Math.PI * (1100 + 900 * deterministicNoise(3.91, Math.floor(i / 18))) * t)
-      * 0.055 * env * shell;
-    out[i] = grain + scuff + tickBurst;
-    out[i] = Math.min(0.32, Math.max(-0.32, out[i]));
+    const envShake = fadeIn * shell ** 0.92 * Math.exp(-2.95 * t);
+    const shakeGr = (deterministicNoise(11.07, i) * 2 - 1) * 0.12 * envShake;
+    const rattLo = Math.sin(2 * Math.PI * (240 + 90 * deterministicNoise(2.3, Math.floor(i / 55))) * t)
+      * 0.05 * envShake;
+    const rattHi = Math.sin(2 * Math.PI * (720 + 180 * deterministicNoise(5.1, Math.floor(i / 38))) * t)
+      * 0.042 * envShake;
+    out[i] = shakeGr + rattLo + rattHi;
+  }
+
+  const landingsSec = [0.08, 0.165, 0.255, 0.38, 0.485, 0.61, 0.705];
+  for (let j = 0; j < landingsSec.length; j++) {
+    const tHit = landingsSec[j];
+    const iHit = Math.floor(tHit * SAMPLE_RATE);
+    const amp = [0.19, 0.14, 0.21, 0.16, 0.22, 0.13, 0.09][j] ?? 0.12;
+    const hz = [310, 280, 360, 300, 340, 270, 320][j] ?? 300;
+    addImpulse(iHit, amp * 0.52, 78, hz, j * 1.7 + 2.1);
+  }
+
+  const rumbleDur = Math.floor(SAMPLE_RATE * 0.12);
+  for (let j = 0; j < 18; j++) {
+    const i0 = Math.floor((0.045 + j * 0.018) * SAMPLE_RATE);
+    const a = [0.04, 0.055, 0.048][j % 3];
+    addImpulse(i0, a, 115, 450 + j * 12, j * 0.9 + 11);
+    if (i0 + rumbleDur < len)
+      for (let k = 0; k < rumbleDur; k++) {
+        const i = i0 + k;
+        const tt = k / SAMPLE_RATE;
+        const e = Math.exp(-48 * tt);
+        out[i] += (deterministicNoise(99 + j, i) * 2 - 1) * 0.05 * e * a;
+      }
+  }
+
+  for (let i = 0; i < len; i++) {
+    out[i] = Math.min(0.92, Math.max(-0.92, out[i]));
   }
   return out;
 }
@@ -119,6 +165,7 @@ const wavChecker = path.join(outDir, "checker-move.wav");
 const wavButton = path.join(outDir, "button-click.wav");
 const wavDice = path.join(outDir, "dice-roll.wav");
 const wavSplash = path.join(outDir, "splash-dice.wav");
+const compressedDice = path.join(outDir, "dice-roll.m4a");
 
 writeWav(wavChecker, genCheckerMove());
 writeWav(wavButton, genButtonClick());
@@ -130,7 +177,7 @@ const mp3Button = path.join(outDir, "button-click.mp3");
 const mp3Dice = path.join(outDir, "dice-roll.mp3");
 const mp3Splash = path.join(outDir, "splash-dice.mp3");
 
-const ff = spawnSync("ffmpeg", [
+let ffOk = spawnSync("ffmpeg", [
   "-y",
   "-i",
   wavChecker,
@@ -139,9 +186,15 @@ const ff = spawnSync("ffmpeg", [
   "-b:a",
   "48k",
   mp3Checker,
-], { encoding: "utf8" });
+], { encoding: "utf8" }).status === 0;
 
-if (ff.status === 0) {
+/** AAC in MP4 (.m4a) — small preload when ffmpeg lacks MP3; Howler loads it cleanly. */
+const afDice = spawnSync("afconvert", [wavDice, compressedDice, "-f", "m4af", "-d", "aac"], {
+  encoding: "utf8",
+});
+const afDiceOk = afDice.status === 0;
+
+if (ffOk) {
   spawnSync("ffmpeg", [
     "-y",
     "-i",
@@ -154,7 +207,7 @@ if (ff.status === 0) {
   ], { encoding: "utf8" });
   spawnSync(
     "ffmpeg",
-    ["-y", "-i", wavDice, "-codec:a", "libmp3lame", "-b:a", "48k", mp3Dice],
+    ["-y", "-i", wavDice, "-codec:a", "libmp3lame", "-b:a", "96k", mp3Dice],
     { encoding: "utf8" }
   );
   spawnSync(
@@ -162,9 +215,18 @@ if (ff.status === 0) {
     ["-y", "-i", wavSplash, "-codec:a", "libmp3lame", "-b:a", "48k", mp3Splash],
     { encoding: "utf8" }
   );
+}
+if (afDiceOk) {
+  // dice-roll.m4a emitted by afconvert
+}
+
+if (ffOk || afDiceOk) {
   // eslint-disable-next-line no-console
-  console.log("Wrote WAV + MP3 to public/sounds/");
+  console.log(
+    ffOk ? "Wrote WAV + dice-roll.mp3 (+ other MP3 helper files) in public/sounds/"
+      : "Wrote WAV + dice-roll.m4a (AAC) — install ffmpeg for full MP3 set",
+  );
 } else {
   // eslint-disable-next-line no-console
-  console.log("ffmpeg not available — kept WAV only in public/sounds/");
+  console.log("ffmpeg + afconvert missing — WAV only written to public/sounds/");
 }

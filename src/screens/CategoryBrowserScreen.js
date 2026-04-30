@@ -47,7 +47,7 @@ export default function CategoryBrowserScreen({ setScreen, completedPuzzleIds = 
             position: "sticky",
             top: 0,
             zIndex: 10,
-            boxShadow: "0 2px 8px rgba(44,26,10,0.08)",
+            boxShadow: C.chromeShadow,
           }}
         >
           <button
@@ -62,7 +62,7 @@ export default function CategoryBrowserScreen({ setScreen, completedPuzzleIds = 
                 ? CATEGORIES.find((c) => c.id === selectedCategory)?.label || "Category"
                 : "Puzzle Categories"}
             </div>
-            <div style={{ color: "#B07010", fontSize: 10, letterSpacing: 2 }}>
+            <div style={{ color: C.hebrewMuted, fontSize: 10, letterSpacing: 2 }}>
               {selectedCategory ? "PERFORMANCE DETAILS" : "HOW YOU DO BY PUZZLE TYPE"}
             </div>
           </div>
@@ -86,7 +86,7 @@ export default function CategoryBrowserScreen({ setScreen, completedPuzzleIds = 
                     borderRadius: 12,
                     padding: "14px 14px 12px",
                     cursor: "pointer",
-                    boxShadow: "0 4px 12px rgba(44,26,10,0.08)",
+                    boxShadow: "0 4px 16px rgba(0,0,0,0.22)",
                   }}
                 >
                   <div style={{ color: C.gold, fontSize: 16, fontWeight: 700, marginBottom: 4 }}>{cat.label}</div>

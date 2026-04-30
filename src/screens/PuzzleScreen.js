@@ -66,7 +66,7 @@ export default function PuzzleScreen(props) {
     <div style={{
       height:"100vh",
       width:"100%",
-      background:C.boardFelt,
+      background:`linear-gradient(165deg,${C.bg} 0%,${C.bgDeep} 72%)`,
       fontFamily:"Georgia,serif",
       position:"relative",
       overflow:"hidden",
@@ -74,11 +74,11 @@ export default function PuzzleScreen(props) {
       flexDirection:"column",
     }}>
       {/* Status-bar safe area */}
-      <div style={{height:"env(safe-area-inset-top, 12px)", flexShrink:0, minHeight:12}}/>
+      <div style={{height:"env(safe-area-inset-top, 12px)", flexShrink:0, minHeight:8}}/>
 
       {/* Top row: menu (left) · centered stats pill · hint (right) */}
       <div style={{
-        padding:"4px 14px 6px",
+        padding:"2px 12px 4px",
         display:"flex",
         alignItems:"center",
         gap:10,
@@ -86,11 +86,11 @@ export default function PuzzleScreen(props) {
       }}>
         <button onClick={()=>setScreen("home")} style={{
           width:46, height:46, borderRadius:"50%",
-          background:"#EADBB8",
-          border:"1px solid rgba(80,55,30,0.15)",
-          color:C.text, fontSize:20, cursor:"pointer",
+          background:C.surface,
+          border:`1px solid ${C.border}`,
+          color:C.textHeading, fontSize:20, cursor:"pointer",
           display:"flex", alignItems:"center", justifyContent:"center",
-          boxShadow:"0 2px 6px rgba(0,0,0,0.1)",
+          boxShadow:C.chromeShadow,
           padding:0, flexShrink:0,
         }}>⋯</button>
 
@@ -102,22 +102,23 @@ export default function PuzzleScreen(props) {
         }}>
           <div style={{
             display:"flex", alignItems:"center", gap:0,
-            background:"rgba(255,250,235,0.85)",
-            borderRadius:16, border:"1px solid rgba(80,55,30,0.15)",
+            background:C.surface,
+            borderRadius:16, border:`1px solid ${C.borderStrong}`,
             overflow:"hidden",
+            boxShadow:`inset 0 0 0 1px ${C.borderInner}`,
           }}>
             {[
-              {v:iq,l:"IQ",c:C.gold},
-              {v:streak+"🔥",l:"STREAK",c:C.text},
+              {v:iq,l:"IQ",c:C.accent},
+              {v:streak+"🔥",l:"STREAK",c:C.textHeading},
               {v:accuracy+"%",l:"ACC",c:C.blue},
             ].map((x,i)=>(
               <div key={i} style={{
                 display:"flex",flexDirection:"column",alignItems:"center",
                 padding:"4px 14px",
-                borderRight:i<2?"1px solid rgba(80,55,30,0.12)":"none",
+                borderRight:i<2?`1px solid ${C.borderInner}`:"none",
               }}>
                 <div style={{color:x.c,fontSize:13,fontWeight:800,lineHeight:1}}>{x.v}</div>
-                <div style={{color:C.textSoft,fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
+                <div style={{color:C.textBody,opacity:0.85,fontSize:8,letterSpacing:1,marginTop:1}}>{x.l}</div>
               </div>
             ))}
           </div>
@@ -132,22 +133,22 @@ export default function PuzzleScreen(props) {
             aria-pressed={sfxMuted}
             style={{
               width:46, height:46, borderRadius:"50%",
-              background:sfxMuted ? "#A89880" : "#7A9882",
-              border:"1px solid rgba(60,40,20,0.28)",
+              background:sfxMuted ? C.speakerMuted : "#4a7f5c",
+              border:`1px solid ${C.borderStrong}`,
               cursor:"pointer",
               display:"flex", alignItems:"center", justifyContent:"center",
-              boxShadow:"0 2px 6px rgba(0,0,0,0.12)",
+              boxShadow:C.chromeShadow,
               padding:0,
             }}
           >
             {sfxMuted ? (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.textOnDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
                 <line x1="23" y1="9" x2="17" y2="15" />
                 <line x1="17" y1="9" x2="23" y2="15" />
               </svg>
             ) : (
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.textOnDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                 <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5" />
                 <path d="M14.5 9 q2 3 0 6" fill="none" />
                 <path d="M16.5 6 q3.2 6 0 12" fill="none" />
@@ -157,14 +158,14 @@ export default function PuzzleScreen(props) {
 
           <button type="button" onClick={handleHint} aria-label="Show hint" style={{
             width:46, height:46, borderRadius:"50%",
-            background:"#8B7355",
-            border:"1px solid rgba(60,40,20,0.3)",
+            background:C.hintBg,
+            border:`1px solid ${C.hintBorder}`,
             cursor:"pointer",
             display:"flex", alignItems:"center", justifyContent:"center",
-            boxShadow:"0 2px 6px rgba(0,0,0,0.15)",
+            boxShadow:C.chromeShadow,
             padding:0, flexShrink:0,
           }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#FDF6E3" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke={C.textOnDark} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M9 18h6M10 22h4M12 2a7 7 0 0 0-4 12.7c.8.7 1 1.4 1 2.3h6c0-.9.2-1.6 1-2.3A7 7 0 0 0 12 2z"/>
             </svg>
           </button>
@@ -173,7 +174,7 @@ export default function PuzzleScreen(props) {
 
       {/* Puzzle info — centered below stats */}
       <div style={{
-        padding:"0 14px 4px",
+        padding:"0 12px 2px",
         display:"flex",
         flexDirection:"column",
         alignItems:"center",
@@ -181,63 +182,60 @@ export default function PuzzleScreen(props) {
         flexShrink:0,
       }}>
         <div style={{display:"flex",alignItems:"center",gap:8}}>
-          <span style={{color:C.gold,fontSize:14,fontWeight:800,fontFamily:"Georgia,serif"}}>
+          <span style={{color:C.accent,fontSize:14,fontWeight:800,fontFamily:"Georgia,serif"}}>
             #{puzzleIdx+1} · {label}
           </span>
           <span style={{
-            background:puzzle.diffColor+"22",
-            color:puzzle.diffColor,
+            background: `${puzzle.diffColor}26`,
+            color:C.textHeading,
             fontSize:9,fontWeight:800,
-            padding:"2px 7px",borderRadius:10,
-            border:"1px solid "+puzzle.diffColor+"44",
+            padding:"2px 8px",borderRadius:10,
+            border:`1px solid rgba(212,169,58,0.45)`,
             letterSpacing:0.5,
+            boxShadow:`inset 0 0 0 1px ${C.borderInner}`,
           }}>{puzzle.difficulty.toUpperCase()}</span>
         </div>
-        <div style={{color:C.textMid,fontSize:11,fontWeight:600}}>
+        <div style={{color:C.subtitleOnDark,fontSize:11,fontWeight:600,textAlign:"center"}}>
           {puzzle.concept}
         </div>
       </div>
 
-      {/* Eval bar — tight, directly above the board */}
-      <div style={{padding:"4px 14px 6px", flexShrink:0}}>
+      {/* Eval bar — tight spacing (~24–32px to board edge on desktop via CSS vars) */}
+      <div style={{padding:"2px 12px 4px", flexShrink:0}}>
         <EvalBar pct={currentPct} delta={deltaPct}/>
       </div>
 
-      {/* THE BOARD — max width / aspect-ratio on desktop, scroll on short viewports */}
-      <div style={{
-        flex:1,
-        minHeight:0,
-        overflowY:"auto",
-        overflowX:"hidden",
-        WebkitOverflowScrolling:"touch",
-        display:"flex",
-        flexDirection:"column",
-        justifyContent:"center",
-        alignItems:"center",
-        width:"100%",
-        paddingLeft:"clamp(12px, 2vw, 36px)",
-        paddingRight:"clamp(12px, 2vw, 36px)",
-        paddingTop:"clamp(4px, 0.6vh, 10px)",
-        boxSizing:"border-box",
-      }}>
-        <div style={{
-          width:"100%",
-          maxWidth:1100,
-          margin:"0 auto",
-          flexShrink:0,
-          display:"flex",
-          flexDirection:"column",
-          alignItems:"stretch",
-          containerType:"size",
-          containerName:"playfield",
-          gap:"clamp(10px, min(3cqw, 2cqh), 22px)",
-        }}>
-          <div style={{
-            width:"100%",
-            aspectRatio:"3 / 2",
-            flexShrink:0,
-            minHeight:0,
-          }}>
+      {/* Play area: desktop = no overflow, board sized to min(width, height limits); mobile = scroll OK */}
+      <div
+        className="puzzle-play-area"
+        style={{
+          flex: 1,
+          minHeight: 0,
+          width: "100%",
+          paddingLeft: "clamp(12px, 2vw, 36px)",
+          paddingRight: "clamp(12px, 2vw, 36px)",
+          paddingTop: 14,
+          paddingBottom: 10,
+          boxSizing: "border-box",
+        }}
+      >
+        <div className="puzzle-centered-col">
+          <div
+            className="puzzle-board-mat"
+            style={{
+              background: C.boardFelt,
+              borderRadius: "clamp(10px, 2vw, 20px)",
+              padding: "clamp(7px, 2vw, 12px)",
+              border: `1px solid rgba(212, 169, 58, 0.32)`,
+              boxShadow: "0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.18)",
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "stretch",
+              minHeight: 0,
+              gap: 0,
+            }}
+          >
+          <div className="puzzle-board-aspect">
             <FlatBoard
               board={liveBoard||puzzle.board}
               selected={selected}
@@ -251,44 +249,49 @@ export default function PuzzleScreen(props) {
             />
           </div>
 
-          {/* Bear-off pocket — discs scale with playfield container width */}
-          <div style={{padding:"0 0 clamp(8px, 1.8cqw, 16px)", flexShrink:0}}>
+          {/* Bear-off — width tracks mat (same width as board); avoid cqw from wrong container */}
+          <div style={{
+            flexShrink:0,
+            paddingTop:"clamp(6px, 1.4vw, 10px)",
+            width:"100%",
+          }}>
             <div
               onClick={canBearOffFromState ? handleBearOff : undefined}
               style={{
-                background: canBearOffFromState ? 'rgba(212,160,23,0.15)' : 'rgba(120,85,50,0.12)',
-                border: canBearOffFromState ? 'max(2px, 0.24cqw) solid rgba(212,160,23,0.7)' : 'max(2px, 0.24cqw) dashed rgba(80,55,30,0.25)',
-                borderRadius:"clamp(10px, 1.1cqw, 16px)",
-                padding:"clamp(8px, 1cqw, 14px) clamp(10px, 1.35cqw, 18px)",
-                display:'flex', alignItems:'center', gap:"clamp(8px, 1.2cqw, 14px)",
+                background: canBearOffFromState ? C.accentWashBold : 'rgba(80,55,30,0.1)',
+                border: canBearOffFromState ? 'max(2px, 0.24vw) solid rgba(212,169,58,0.75)' : 'max(2px, 0.24vw) dashed rgba(80,55,30,0.28)',
+                borderRadius:"clamp(10px, 2.2vw, 16px)",
+                padding:"clamp(8px, 2.2vw, 14px) clamp(10px, 2.6vw, 18px)",
+                display:'flex', alignItems:'center', gap:"clamp(8px, 2vw, 14px)",
                 cursor: canBearOffFromState ? 'pointer' : 'default',
                 animation: canBearOffFromState ? 'trayPulse 1.2s ease-in-out infinite' : 'none',
               }}
             >
               <div style={{
                 display:'flex', flexWrap:'wrap',
-                gap:"clamp(5px, 0.7cqw, 10px)",
+                gap:"clamp(5px, 1.2vw, 10px)",
                 flex:1,
-                minHeight:"clamp(20px, 3.8cqw, 36px)",
+                minWidth:0,
+                minHeight:"clamp(20px, 5vw, 36px)",
               }}>
                 {Array.from({length:Math.min(borneOff,15)}).map((_,i)=>(
                   <div key={i} style={{
-                    width:"clamp(14px, calc(100cqw / 26), 34px)",
-                    height:"clamp(14px, calc(100cqw / 26), 34px)",
+                    width:"clamp(14px, calc((100%) / 26), 34px)",
+                    height:"clamp(14px, calc((100%) / 26), 34px)",
                     borderRadius:'50%',
                     flexShrink:0,
                     boxSizing:'border-box',
                     background:'radial-gradient(circle at 38% 30%,#FFFFFF 0%,#F4EBD6 35%,#D4C2A0 75%,#A09070 100%)',
-                    border:"max(1.5px, 0.12cqw) solid #A08B60",
-                    boxShadow:"0 clamp(2px, 0.22cqw, 8px) clamp(6px, 0.55cqw, 14px) rgba(0,0,0,0.22)",
+                    border:"max(1.5px, 0.12vw) solid #A08B60",
+                    boxShadow:"0 clamp(2px, 0.55vw, 8px) clamp(6px, 1.3vw, 14px) rgba(0,0,0,0.22)",
                   }}/>
                 ))}
                 {borneOff===0 && (
                   <div style={{
                     color:'rgba(60,40,20,0.35)',
-                    fontSize:"clamp(11px, 2.85cqw, 15px)",
+                    fontSize:"clamp(11px, 3.2vw, 15px)",
                     fontStyle:'italic',
-                    lineHeight:"clamp(20px, 3.8cqw, 36px)",
+                    lineHeight:"clamp(20px, 5vw, 36px)",
                   }}>
                     Bear off pocket
                   </div>
@@ -296,17 +299,18 @@ export default function PuzzleScreen(props) {
               </div>
               <div style={{textAlign:'right', flexShrink:0}}>
                 <div style={{
-                  color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.45)',
-                  fontSize:"clamp(9px, 2.05cqw, 12px)", fontWeight:800, letterSpacing:1,
+                  color: canBearOffFromState ? C.accent : 'rgba(60,40,20,0.48)',
+                  fontSize:"clamp(9px, 2.25vw, 12px)", fontWeight:800, letterSpacing:1,
                 }}>
                   {canBearOffFromState ? 'TAP TO BEAR OFF' : 'BORNE OFF'}
                 </div>
                 <div style={{
-                  color: canBearOffFromState ? '#B8860B' : 'rgba(60,40,20,0.5)',
-                  fontSize:"clamp(15px, 4.55cqw, 24px)", fontWeight:800, marginTop:1,
+                  color: canBearOffFromState ? C.accent : 'rgba(60,40,20,0.52)',
+                  fontSize:"clamp(15px, 4.75vw, 24px)", fontWeight:800, marginTop:1,
                 }}>{borneOff} / 15</div>
               </div>
             </div>
+          </div>
           </div>
         </div>
       </div>
@@ -324,7 +328,71 @@ export default function PuzzleScreen(props) {
           from { opacity:0; transform:translate(-50%, 20px); }
           to   { opacity:1; transform:translate(-50%, 0); }
         }
-        @keyframes trayPulse{0%,100%{border-color:rgba(212,160,23,0.5)}50%{border-color:rgba(212,160,23,0.95)}}
+        @keyframes trayPulse{0%,100%{border-color:rgba(212,169,58,0.55)}50%{border-color:rgba(212,169,58,0.95)}}
+
+        .puzzle-play-area {
+          flex: 1;
+          min-height: 0;
+          container-type: size;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: flex-start;
+        }
+
+        /* Column that holds mat; width tracks min(1100, pane); desktop height capped to pane */
+        .puzzle-centered-col {
+          width: min(1100px, min(95vw, 100cqw));
+          flex: 0 1 auto;
+          min-height: 0;
+          max-height: 100cqh;
+          display: flex;
+          flex-direction: column;
+        }
+
+        @media (min-width: 768px) {
+          .puzzle-play-area {
+            overflow: hidden;
+          }
+
+          /*
+           * Real backgammon feels wider-than-tall: use 5:3 (vs 3:2) so triangles are less elongated.
+           * Board box = smaller of width cap vs height cap, using pane cqh so the felt + tray fits.
+           * --pane-slot reserves mat vertical padding (~28px) + bear-off row (~80–94px) + gap (~22px).
+           */
+          .puzzle-board-aspect {
+            --pane-slot: clamp(132px, 15cqh, 162px);
+            --cap-w: min(1100px, min(95vw, 100cqw));
+            --cap-h: calc(100cqh - var(--pane-slot));
+            --board-w: min(var(--cap-w), calc(var(--cap-h) * 5 / 3));
+            box-sizing: border-box;
+            margin-inline: auto;
+            flex-shrink: 0;
+            width: var(--board-w);
+            height: calc(var(--board-w) * 3 / 5);
+            max-width: min(1100px, 95cqw);
+          }
+        }
+
+        @media (max-width: 767.98px) {
+          .puzzle-play-area {
+            overflow-x: hidden;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+          }
+
+          .puzzle-centered-col {
+            width: min(1100px, 95cqw);
+            max-height: none;
+          }
+
+          .puzzle-board-aspect {
+            width: 100%;
+            aspect-ratio: 3 / 2;
+            height: auto;
+            max-width: 100%;
+          }
+        }
       `}</style>
 
       {/* Minimal draggable popup */}
@@ -334,7 +402,7 @@ export default function PuzzleScreen(props) {
       }}>
         {phase==="hint" ? (
           <>
-            <div style={{color:C.gold,fontSize:22,fontWeight:800,fontFamily:"Georgia,serif",marginBottom:6}}>Hint</div>
+            <div style={{color:C.accent,fontSize:22,fontWeight:800,fontFamily:"Georgia,serif",marginBottom:6}}>Hint</div>
             <div style={{color:C.textSoft,fontSize:11,marginBottom:14,letterSpacing:0.5}}>
               {label} · {puzzle.difficulty}
             </div>
@@ -342,17 +410,17 @@ export default function PuzzleScreen(props) {
               {puzzle.description}
             </p>
             <div style={{
-              background:"rgba(184,134,11,0.08)",
-              border:"1px solid rgba(184,134,11,0.25)",
+              background:C.accentWashBold,
+              border:`1px solid ${C.borderInner}`,
               borderRadius:10, padding:"12px 14px",
-              color:C.textMid, fontSize:13, lineHeight:1.6,
+              color:C.textBody, fontSize:13, lineHeight:1.6,
               fontFamily:"Georgia,serif", marginBottom:20,
             }}>
-              <strong style={{color:C.gold}}>Theme:</strong> {puzzle.concept}
+              <strong style={{color:C.accent}}>Theme:</strong> {puzzle.concept}
             </div>
             <button onClick={()=>{ setPopupOpen(false); setPhase("playing"); }} style={{
               width:"100%", padding:"14px", background:C.goldBtn, border:"none", borderRadius:12,
-              cursor:"pointer", color:"#FDF6E3", fontSize:14, fontWeight:800, letterSpacing:2,
+              cursor:"pointer", color:C.textOnDark, fontSize:14, fontWeight:800, letterSpacing:2,
               fontFamily:"Georgia,serif",
             }}>
               GOT IT
@@ -401,8 +469,8 @@ export default function PuzzleScreen(props) {
 
             <button onClick={handleNextPuzzle} style={{
               width:"100%", padding:"15px", background:C.goldBtn, border:"none", borderRadius:12,
-              cursor:"pointer", color:"#FDF6E3", fontSize:16, fontWeight:800, letterSpacing:3,
-              fontFamily:"Georgia,serif", boxShadow:"0 4px 16px rgba(184,134,11,0.28)",
+              cursor:"pointer", color:C.textOnDark, fontSize:16, fontWeight:800, letterSpacing:3,
+              fontFamily:"Georgia,serif", boxShadow:`0 4px 16px ${C.goldGlow}`,
             }}>
               NEXT PUZZLE →
             </button>
@@ -435,16 +503,16 @@ export default function PuzzleScreen(props) {
 
             <div style={{display:"flex",gap:10}}>
               <button onClick={handleNextPuzzle} style={{
-                flex:1, padding:"14px", background:C.bgDeep, border:`1.5px solid ${C.border}`,
-                borderRadius:12, cursor:"pointer", color:C.textMid, fontSize:13, fontWeight:700,
-                letterSpacing:2, fontFamily:"Georgia,serif",
+                flex:1, padding:"14px", background:C.surface, border:`1.5px solid ${C.border}`,
+                borderRadius:12, cursor:"pointer", color:C.textHeading, fontSize:13, fontWeight:700,
+                letterSpacing:2, fontFamily:"Georgia,serif", boxShadow:`inset 0 0 0 1px ${C.borderInner}`,
               }}>
                 SKIP
               </button>
               <button onClick={handleRetry} style={{
                 flex:2, padding:"14px", background:C.goldBtn, border:"none", borderRadius:12,
-                cursor:"pointer", color:"#FDF6E3", fontSize:14, fontWeight:800, letterSpacing:2,
-                fontFamily:"Georgia,serif", boxShadow:"0 4px 16px rgba(184,134,11,0.28)",
+                cursor:"pointer", color:C.textOnDark, fontSize:14, fontWeight:800, letterSpacing:2,
+                fontFamily:"Georgia,serif", boxShadow:`0 4px 16px ${C.goldGlow}`,
               }}>
                 TRY AGAIN
               </button>

@@ -1,15 +1,14 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Die from "./Die";
+import { C } from "../constants/palette";
 import { playSplashDice, tryResumeAudioContext } from "../audio/puzzleSfx";
 
-const BG =
-  `radial-gradient(ellipse at 38% 12%, rgba(184,134,11,0.09) 0%, transparent 42%),
-   radial-gradient(ellipse at 70% 88%, rgba(0,0,0,0.22) 0%, transparent 48%),
-   repeating-linear-gradient(0deg, rgba(44,34,26,0.06) 0 1px, transparent 1px 3px),
-   repeating-linear-gradient(90deg, rgba(44,34,26,0.05) 0 1px, transparent 1px 3px),
-   linear-gradient(160deg,#3a2817 0%,#312214 42%,#24180e 100%)`;
+/** Public path — preload matches in index.html */
+const SPLASH_ART = `${process.env.PUBLIC_URL ?? ""}/images/coffeehouse-splash.png`;
+/** Intrinsic size (coffeehouse hero asset) — stable layout slot */
+const ART_W = 1024;
+const ART_H = 683;
 
-/** Full-viewport Chess.com-style intro → landing (every load; tap to skip). */
+/** Full-viewport intro every load; tap to skip; ~1.8s sequence (PNG — no stroke-draw). */
 export default function IntroSplash({ onDone }) {
   const finished = useRef(false);
   const reduceMotion = useMemo(
@@ -34,7 +33,7 @@ export default function IntroSplash({ onDone }) {
   }, [reduceMotion]);
 
   useEffect(() => {
-    const ms = reduceMotion ? 440 : tapSkip ? 295 : 1520;
+    const ms = reduceMotion ? 460 : tapSkip ? 295 : 1815;
     const id = window.setTimeout(() => finish(), ms);
     return () => window.clearTimeout(id);
   }, [tapSkip, reduceMotion, finish]);
@@ -69,95 +68,169 @@ export default function IntroSplash({ onDone }) {
         position: "fixed",
         inset: 0,
         zIndex: 9999,
-        background: BG,
+        backgroundColor: C.bgDeep,
         cursor: "pointer",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         WebkitTapHighlightColor: "transparent",
         touchAction: "manipulation",
+        paddingLeft: "max(14px, env(safe-area-inset-left))",
+        paddingRight: "max(14px, env(safe-area-inset-right))",
+        paddingTop: "env(safe-area-inset-top)",
+        paddingBottom: "env(safe-area-inset-bottom)",
+        boxSizing: "border-box",
       }}
       className={rootClass || undefined}
     >
       <style>{`
-        @keyframes splashDieFade {
-          0% { opacity: 0; }
-          20% { opacity: 1; }
-          86.666% { opacity: 1; }
-          100% { opacity: 0; }
+        @keyframes splashCoffeeArt {
+          0% {
+            opacity: 0;
+            transform: scale(0.98);
+            animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+          }
+          33.333% {
+            opacity: 1;
+            transform: scale(1);
+            animation-timing-function: linear;
+          }
+          83.333% {
+            opacity: 1;
+            transform: scale(1);
+            animation-timing-function: ease-out;
+          }
+          100% {
+            opacity: 0;
+            transform: scale(1);
+          }
         }
-        @keyframes splashDieScale {
-          0%, 20% { transform: scale(1.1); }
-          40% { transform: scale(1); }
-          86.666%, 100% { transform: scale(1); }
+
+        @keyframes splashCoffeeWordmark {
+          0%, 27.78% {
+            opacity: 0;
+            transform: translateY(8px);
+            animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+          }
+          50% {
+            opacity: 1;
+            transform: translateY(0);
+            animation-timing-function: linear;
+          }
+          83.333% {
+            opacity: 1;
+            transform: translateY(0);
+            animation-timing-function: ease-out;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(0);
+          }
         }
-        @keyframes splashWordFade {
-          0%, 20% { opacity: 0; transform: translateY(10px); }
-          40% { opacity: 1; transform: translateY(0); }
-          86.666% { opacity: 1; }
-          100% { opacity: 0; transform: translateY(0); }
+
+        @keyframes splashCoffeeHebrew {
+          0%, 44.44% {
+            opacity: 0;
+            transform: translateY(6px);
+            animation-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+          }
+          66.667% {
+            opacity: 1;
+            transform: translateY(0);
+            animation-timing-function: linear;
+          }
+          83.333% {
+            opacity: 1;
+            transform: translateY(0);
+            animation-timing-function: ease-out;
+          }
+          100% {
+            opacity: 0;
+            transform: translateY(0);
+          }
         }
-        @keyframes splashHebrewFade {
-          0%, 40% { opacity: 0; transform: translateY(8px); }
-          66.667% { opacity: 1; transform: translateY(0); }
-          86.666% { opacity: 1; }
-          100% { opacity: 0; transform: translateY(0); }
-        }
+
         .intro-splash__stack {
           display: flex;
           flex-direction: column;
           align-items: center;
           text-align: center;
           pointer-events: none;
+          width: 100%;
+          max-width: min(640px, 92vw);
+          transform: translateY(-4vh);
         }
-        .intro-splash__die {
-          animation:
-            splashDieFade 1.5s ease forwards,
-            splashDieScale 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
-          width: 92px;
-          height: 92px;
-          filter: drop-shadow(0 6px 20px rgba(0, 0, 0, 0.35));
+
+        .intro-splash__art-wrap {
+          width: min(600px, 85vw);
+          max-width: 100%;
+          margin: 0 auto;
         }
+
+        .intro-splash__art {
+          display: block;
+          width: 100%;
+          height: auto;
+          animation: splashCoffeeArt 1.8s both;
+        }
+
         .intro-splash__wordmark {
-          margin-top: 18px;
+          margin-top: clamp(14px, 3.8vw, 22px);
           font-family: Georgia, "Times New Roman", serif;
           font-weight: 900;
-          font-size: clamp(26px, 7vw, 36px);
-          letter-spacing: 4px;
-          color: #B8860B;
-          text-shadow: 0 2px 22px rgba(184,134,11,0.22);
-          animation: splashWordFade 1.5s ease forwards;
+          font-size: clamp(28px, 10.5vw, 40px);
+          letter-spacing: clamp(5px, 1.8vw, 10px);
+          color: ${C.accent};
+          text-shadow: 0 2px 28px rgba(212, 169, 58, 0.22);
+          line-height: 1.08;
+          animation: splashCoffeeWordmark 1.8s both;
+          max-width: 100%;
         }
+
         .intro-splash__hebrew {
-          margin-top: 8px;
+          margin-top: clamp(10px, 3vw, 14px);
           font-family: "Noto Sans Hebrew", system-ui, sans-serif;
-          font-size: clamp(17px, 4.5vw, 20px);
+          font-size: clamp(18px, 6vw, 22px);
           font-weight: 600;
-          letter-spacing: 6px;
-          color: #B07010;
+          letter-spacing: clamp(5px, 2vw, 9px);
+          color: ${C.hebrewMuted};
           direction: rtl;
           unicode-bidi: embed;
-          animation: splashHebrewFade 1.5s ease forwards;
+          animation: splashCoffeeHebrew 1.8s both;
+          max-width: 100%;
         }
-        [data-intro-splash].intro-splash--reduce .intro-splash__die,
+
+        [data-intro-splash].intro-splash--reduce .intro-splash__stack {
+          transform: none;
+        }
+
+        [data-intro-splash].intro-splash--reduce .intro-splash__art,
         [data-intro-splash].intro-splash--reduce .intro-splash__wordmark,
         [data-intro-splash].intro-splash--reduce .intro-splash__hebrew {
           animation: none !important;
           opacity: 1;
           transform: none;
         }
+
         [data-intro-splash].intro-splash--reduce {
           animation: splashReduceFade 0.42s ease forwards;
         }
+
         @keyframes splashReduceFade {
-          from { opacity: 1; }
-          to { opacity: 0; }
+          from {
+            opacity: 1;
+          }
+          to {
+            opacity: 0;
+          }
         }
+
         [data-intro-splash].intro-splash--tap {
           opacity: 0;
-          transition: opacity 0.29s ease;
+          transition: opacity 0.28s ease;
         }
-        [data-intro-splash].intro-splash--tap .intro-splash__die,
+
+        [data-intro-splash].intro-splash--tap .intro-splash__art,
         [data-intro-splash].intro-splash--tap .intro-splash__wordmark,
         [data-intro-splash].intro-splash--tap .intro-splash__hebrew {
           animation: none !important;
@@ -165,8 +238,17 @@ export default function IntroSplash({ onDone }) {
       `}</style>
 
       <div className="intro-splash__stack">
-        <div className="intro-splash__die">
-          <Die value={6} size={92} />
+        <div className="intro-splash__art-wrap">
+          <img
+            className="intro-splash__art"
+            src={SPLASH_ART}
+            alt=""
+            width={ART_W}
+            height={ART_H}
+            decoding="sync"
+            fetchPriority="high"
+            draggable={false}
+          />
         </div>
         <div className="intro-splash__wordmark">SHESH BESH</div>
         <div className="intro-splash__hebrew">שש בש</div>

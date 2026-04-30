@@ -11,3 +11,19 @@ code {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
     monospace;
 }
+
+/* Brand — synced with src/constants/palette.js for global overrides & future theming */
+:root {
+  --color-bg-primary: #4a0a0a;
+  --color-bg-secondary: #5a1a1a;
+  --color-surface: #f5ecd9;
+  --color-accent: #d4a93a;
+  --color-text-on-dark: #f5ecd9;
+  --color-text-on-light: #4a0a0a;
+  --color-text-body: #3a2828;
+  --color-border: rgba(212, 169, 58, 0.5);
+}
+
+body {
+  background-color: var(--color-bg-primary);
+}

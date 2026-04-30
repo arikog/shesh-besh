@@ -2,16 +2,20 @@ import { Howl, Howler } from "howler";
 
 const STORAGE_KEY = "shesh-besh:sfxMuted";
 
-/** ~45% ambience level (request: 40–50%) */
+/** ~45% ambience level */
 const VOL_CHECKER = 0.46;
 const VOL_BUTTON = 0.42;
-/** Dice roll stays softer than checker / UI clicks */
-const VOL_DICE = 0.3;
+/** Puzzle-load dice tumble — prominent scene cue, still under full-scale */
+const VOL_DICE = 0.55;
 
 const publicRoot = `${process.env.PUBLIC_URL ?? ""}`.replace(/\/$/, "");
 
-const sfxSrc = (base) =>
-  `${publicRoot}/sounds/${base}.wav`;
+const sfxSrc = (base) => `${publicRoot}/sounds/${base}.wav`;
+const sfxDiceRollSrc = () => {
+  const m4a = `${publicRoot}/sounds/dice-roll.m4a`;
+  const wav = `${publicRoot}/sounds/dice-roll.wav`;
+  return [m4a, wav];
+};
 
 let userMutedFlag = typeof window !== "undefined" && safeReadMuted();
 
@@ -45,7 +49,7 @@ const buttonHowl = new Howl({
 });
 
 const diceRollHowl = new Howl({
-  src: sfxSrc("dice-roll"),
+  src: sfxDiceRollSrc(),
   volume: VOL_DICE,
   preload: true,
   html5: false,
@@ -98,9 +102,15 @@ export function playAdvancePuzzle() {
   buttonHowl.play();
 }
 
-/** New puzzle dice shown / retry — overlaps ok with checker if both fire close together */
+/** New puzzle dice on screen — double rAF so audio follows visible dice */
 export function playDiceRoll() {
   if (userMutedFlag) return;
+  if (typeof requestAnimationFrame === "function") {
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => diceRollHowl.play());
+    });
+    return;
+  }
   diceRollHowl.play();
 }
 

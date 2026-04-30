@@ -36,7 +36,7 @@ export default function ResultPopup({ open, children, onClose }) {
       onClick={(e)=>{ if(e.target===e.currentTarget) onClose(); }}
       style={{
         position:"fixed", inset:0, zIndex:900,
-        background: open ? "rgba(44,26,10,0.5)" : "rgba(44,26,10,0)",
+        background: open ? C.overlayBackdrop : "rgba(74,10,10,0)",
         pointerEvents: open ? "auto" : "none",
         display:"flex", alignItems:"flex-end", justifyContent:"center",
         transition:"background 0.25s",
@@ -50,7 +50,7 @@ export default function ResultPopup({ open, children, onClose }) {
           borderRadius:"20px 20px 0 0",
           transform: open ? `translateY(${drag}px)` : "translateY(100%)",
           transition: dragging ? "none" : "transform 0.35s cubic-bezier(.2,.9,.3,1)",
-          boxShadow:"0 -8px 32px rgba(0,0,0,0.25)",
+          boxShadow:`0 -8px 32px rgba(0,0,0,0.35), inset 0 2px 0 rgba(212,169,58,0.12)`,
           maxHeight:"82vh",
           overflowY:"auto",
           position:"relative",
@@ -75,13 +75,13 @@ export default function ResultPopup({ open, children, onClose }) {
             touchAction:"none",
           }}
         >
-          <div style={{width:44, height:5, borderRadius:3, background:"rgba(60,40,20,0.25)"}}/>
+          <div style={{ width: 44, height: 5, borderRadius: 3, background: "rgba(212,169,58,0.35)" }}/>
         </div>
 
         <button onClick={onClose} style={{
           position:"absolute", top:14, right:14,
           width:32, height:32, borderRadius:"50%",
-          background:"rgba(60,40,20,0.08)", border:"none",
+          background: C.accentWashBold, border: "none",
           color:C.textMid, fontSize:14, cursor:"pointer",
           display:"flex", alignItems:"center", justifyContent:"center",
         }}>✕</button>
