@@ -43,18 +43,21 @@ function deterministicNoise(seed, i) {
   return x - Math.floor(x);
 }
 
+/** Short wood-on-wood knock: low modes + brief grain, minimal “hollow” highs */
 function genCheckerMove() {
-  const dur = 0.075;
+  const dur = 0.095;
   const len = Math.floor(SAMPLE_RATE * dur);
   const out = new Float32Array(len);
   for (let i = 0; i < len; i++) {
     const t = i / SAMPLE_RATE;
-    const env = Math.exp(-t * 92);
-    const env2 = Math.exp(-t * 200);
-    const body = Math.sin(2 * Math.PI * 310 * t) * 0.42 * env;
-    const click = Math.sin(2 * Math.PI * 1280 * t) * 0.14 * env2;
-    const n = (deterministicNoise(2.17, i) * 2 - 1) * 0.07 * env * env;
-    out[i] = body + click + n;
+    const env = Math.exp(-46 * t) * (1 - Math.exp(-900 * t));
+    const f0 = 158;
+    const body =
+      Math.sin(2 * Math.PI * f0 * t) * 0.44 * env +
+      Math.sin(2 * Math.PI * f0 * 2.05 * t) * 0.16 * env +
+      Math.sin(2 * Math.PI * 268 * t) * 0.08 * env;
+    const grain = ((deterministicNoise(2.17, i) * 2 - 1) * 0.07 * env * env);
+    out[i] = body + grain;
   }
   return out;
 }
@@ -74,68 +77,63 @@ function genButtonClick() {
 }
 
 /**
- * Scene-setting tabletop dice (~0.75s): hand/shake tumble → wood-tone clacks → decay.
- * Synth only (license-free); replace public/sounds/dice-roll.{wav,mp3} with sourced Foley if desired.
+ * Dice on wooden board: sparse low-mid “clacks” + soft skitter, no long filtered-noise “air” bed.
  */
 function genDiceRoll() {
-  const dur = 0.78;
+  const dur = 0.58;
   const len = Math.floor(SAMPLE_RATE * dur);
   const out = new Float32Array(len);
 
-  /** Short wooden “clack” impulse */
-  function addImpulse(i0, amplitude, decayHz, barkHz, seedOff) {
-    const span = Math.min(len - i0, Math.floor(SAMPLE_RATE * 0.045));
+  function addWoodClack(i0, amp, f0, seed) {
+    const span = Math.min(len - i0, Math.floor(SAMPLE_RATE * 0.042));
     for (let k = 0; k < span; k++) {
       const i = i0 + k;
       if (i >= len) break;
       const tt = k / SAMPLE_RATE;
-      const e = Math.exp(-decayHz * tt);
-      const thump = Math.sin(2 * Math.PI * barkHz * tt + seedOff) * amplitude * e;
-      const tic = Math.sin(2 * Math.PI * (barkHz * 4.7 + 80) * tt) * amplitude * 0.35 * e;
-      const n = (deterministicNoise(40.22 + seedOff, i) * 2 - 1) * amplitude * 0.09 * e;
-      out[i] += thump + tic + n;
+      const e = Math.exp(-88 * tt);
+      const w =
+        amp *
+        e *
+        (Math.sin(2 * Math.PI * f0 * tt + seed) * 0.52 +
+          Math.sin(2 * Math.PI * f0 * 2.05 * tt + seed * 1.3) * 0.22 +
+          Math.sin(2 * Math.PI * f0 * 3.6 * tt + seed * 2.1) * 0.1);
+      const grain = ((deterministicNoise(40.2 + seed, i) * 2 - 1) * amp * 0.045 * e);
+      out[i] += w + grain;
     }
   }
 
+  /** Irregular board contacts (ms, relative amplitude) */
+  const hits = [
+    [0.032, 0.2],
+    [0.078, 0.14],
+    [0.118, 0.18],
+    [0.168, 0.12],
+    [0.212, 0.2],
+    [0.258, 0.11],
+    [0.302, 0.17],
+    [0.352, 0.13],
+    [0.398, 0.16],
+    [0.448, 0.1],
+    [0.498, 0.14],
+  ];
+  const freqs = [188, 215, 172, 228, 198, 205, 182, 222, 194, 208, 176];
+  for (let j = 0; j < hits.length; j++) {
+    const [tSec, a] = hits[j];
+    const i0 = Math.floor(tSec * SAMPLE_RATE);
+    addWoodClack(i0, a * 0.62, freqs[j % freqs.length], 2.4 + j * 0.85);
+  }
+
+  /** Brief low skitter between hits (board texture, not air hiss) */
   for (let i = 0; i < len; i++) {
     const t = i / SAMPLE_RATE;
-    const rel = i / Math.max(len - 1, 1);
-    const fadeIn = Math.min(1, t / 0.04);
-    const shell = Math.sin(Math.PI * rel);
-    const envShake = fadeIn * shell ** 0.92 * Math.exp(-2.95 * t);
-    const shakeGr = (deterministicNoise(11.07, i) * 2 - 1) * 0.12 * envShake;
-    const rattLo = Math.sin(2 * Math.PI * (240 + 90 * deterministicNoise(2.3, Math.floor(i / 55))) * t)
-      * 0.05 * envShake;
-    const rattHi = Math.sin(2 * Math.PI * (720 + 180 * deterministicNoise(5.1, Math.floor(i / 38))) * t)
-      * 0.042 * envShake;
-    out[i] = shakeGr + rattLo + rattHi;
-  }
-
-  const landingsSec = [0.08, 0.165, 0.255, 0.38, 0.485, 0.61, 0.705];
-  for (let j = 0; j < landingsSec.length; j++) {
-    const tHit = landingsSec[j];
-    const iHit = Math.floor(tHit * SAMPLE_RATE);
-    const amp = [0.19, 0.14, 0.21, 0.16, 0.22, 0.13, 0.09][j] ?? 0.12;
-    const hz = [310, 280, 360, 300, 340, 270, 320][j] ?? 300;
-    addImpulse(iHit, amp * 0.52, 78, hz, j * 1.7 + 2.1);
-  }
-
-  const rumbleDur = Math.floor(SAMPLE_RATE * 0.12);
-  for (let j = 0; j < 18; j++) {
-    const i0 = Math.floor((0.045 + j * 0.018) * SAMPLE_RATE);
-    const a = [0.04, 0.055, 0.048][j % 3];
-    addImpulse(i0, a, 115, 450 + j * 12, j * 0.9 + 11);
-    if (i0 + rumbleDur < len)
-      for (let k = 0; k < rumbleDur; k++) {
-        const i = i0 + k;
-        const tt = k / SAMPLE_RATE;
-        const e = Math.exp(-48 * tt);
-        out[i] += (deterministicNoise(99 + j, i) * 2 - 1) * 0.05 * e * a;
-      }
+    const env = Math.exp(-5.2 * t) * Math.min(1, t / 0.02);
+    const sk = (deterministicNoise(11.07, i) * 2 - 1) * 0.028 * env;
+    const lo = Math.sin(2 * Math.PI * 120 * t) * 0.018 * env * Math.sin(Math.PI * t * 12);
+    out[i] += sk + lo;
   }
 
   for (let i = 0; i < len; i++) {
-    out[i] = Math.min(0.92, Math.max(-0.92, out[i]));
+    out[i] = Math.min(0.9, Math.max(-0.9, out[i]));
   }
   return out;
 }

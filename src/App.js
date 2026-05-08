@@ -370,6 +370,7 @@ export default function SheshBesh() {
       borneOff={borneOff}
       diceUsedFlags={diceUsedFlags}
       wrongFlash={wrongFlash}
+      diceLeft={diceLeft}
       canBearOffFromState={canBearOffFromState}
       phase={phase}
       popupOpen={popupOpen}

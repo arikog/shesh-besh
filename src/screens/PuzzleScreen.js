@@ -11,7 +11,8 @@ import PashaAlert from "../components/PashaAlert";
 export default function PuzzleScreen(props) {
   const {
     setScreen, handleHint, iq, streak, accuracy, puzzleIdx, label, puzzle, currentPct, deltaPct,
-    liveBoard, movesDone, resultBoard, selected, legalDests, handlePointClick, handleBearOff, borneOff,     diceUsedFlags, wrongFlash,
+    liveBoard, movesDone, resultBoard, selected, legalDests, handlePointClick, handleBearOff, borneOff,
+    diceUsedFlags, wrongFlash, diceLeft,
     canBearOffFromState, phase, popupOpen, setPopupOpen, setPhase, isCorrect, handleNextPuzzle, handleRetry, attempts,
     iqDelta, resultIqDelta, onRecordPuzzleAttempt,
     sfxMuted, toggleSfxMuted,
@@ -362,6 +363,7 @@ export default function PuzzleScreen(props) {
                   dice={[puzzle.dice[0], puzzle.dice[1]]}
                   diceUsed={diceUsedFlags}
                   wrongFlashPoint={wrongFlash}
+                  remainingDice={diceLeft}
                 />
               ) : (
                 <FlatBoard
@@ -375,6 +377,7 @@ export default function PuzzleScreen(props) {
                   dice={[puzzle.dice[0], puzzle.dice[1]]}
                   diceUsed={diceUsedFlags}
                   wrongFlashPoint={wrongFlash}
+                  remainingDice={diceLeft}
                 />
               )}
             </div>
@@ -384,6 +387,7 @@ export default function PuzzleScreen(props) {
             className={`puzzle-bear-off-row${narrowPortraitBoard ? " puzzle-bear-off-row--player-bottom" : ""}`}
           >
             <div
+              data-player-bear-off=""
               onClick={canBearOffFromState ? handleBearOff : undefined}
               style={{
                 background: canBearOffFromState ? C.accentWashBold : "rgba(80,55,30,0.1)",

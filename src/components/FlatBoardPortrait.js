@@ -1,22 +1,17 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { C } from "../constants/palette";
 import Die from "./Die";
+import { getLegalDests } from "../game/moveEngine";
+import { isPointerOverPlayerBearOff, resolveBoardPoint } from "../game/boardHitTest";
+import {
+  animateCheckerDragRejectReturn,
+  checkerDragGhostStylePx,
+  readCheckerSizePxFromBoard,
+} from "../game/checkerFlight";
 
 /** Portrait phone: same indices as FlatBoard; vertical bar, tall triangles (not a rotated board). */
 const DRAG_THRESHOLD = 6;
-
-function resolveBoardPoint(clientX, clientY) {
-  if (typeof document === "undefined") return undefined;
-  const stack = document.elementsFromPoint(clientX, clientY);
-  for (let i = 0; i < stack.length; i++) {
-    const cell = stack[i].closest?.("[data-board-point]");
-    if (cell?.hasAttribute?.("data-board-point")) {
-      const n = parseInt(cell.getAttribute("data-board-point"), 10);
-      if (!Number.isNaN(n)) return n;
-    }
-  }
-  return undefined;
-}
 
 const portraitBoardVarsCss = `
   [data-flat-board-portrait-root]{
@@ -42,11 +37,29 @@ export default function FlatBoardPortrait({
   wrongFlashPoint = null,
   onCheckerDragComplete,
   interactionLocked = false,
+  remainingDice = [],
   diceIntroRolling = false,
 }) {
+  const boardRef = useRef(board);
+  const diceRemainRef = useRef(remainingDice);
+  useEffect(() => {
+    boardRef.current = board;
+    diceRemainRef.current = remainingDice;
+  }, [board, remainingDice]);
+
+  const [fingerDrag, setFingerDrag] = useState(null);
   const [suppressDicePointer, setSuppressDicePointer] = useState(false);
   const gestureRef = useRef(null);
+  const rafDrag = useRef(0);
 
+  const dragLegals = useMemo(() => {
+    if (!fingerDrag?.showGhost || fingerDrag.from === undefined) return [];
+    try {
+      return getLegalDests(board, fingerDrag.from, remainingDice ?? []);
+    } catch (_) {
+      return [];
+    }
+  }, [board, fingerDrag?.from, fingerDrag?.showGhost, remainingDice]);
   const handlePtDown = useCallback(
     (e, ptIdx) => {
       if (interactionLocked || e.button !== 0) return;
@@ -55,13 +68,44 @@ export default function FlatBoardPortrait({
       const downVal = board[ptIdx] || 0;
       const canDragFrom = typeof onCheckerDragComplete === "function" && downVal > 0;
 
-      const ctx = { downPt: ptIdx, sx: e.clientX, sy: e.clientY, canDragFrom };
-      gestureRef.current = ctx;
+      const ctx = { downPt: ptIdx, sx: e.clientX, sy: e.clientY, canDragFrom, checkerPx: 0, dragging: false };
+
+      const scheduleDragPos = (cx, cy, showGhost) => {
+        const hoverBearOff = isPointerOverPlayerBearOff(cx, cy);
+        const hover = hoverBearOff ? undefined : resolveBoardPoint(cx, cy);
+        let next = null;
+        if (showGhost) {
+          const sz = ctx.checkerPx || readCheckerSizePxFromBoard();
+          ctx.checkerPx = sz;
+          next = {
+            from: ctx.downPt,
+            x: cx,
+            y: cy,
+            hoverPt: hover,
+            hoverBearOff,
+            showGhost: true,
+            sizePx: sz,
+          };
+        }
+        if (rafDrag.current) cancelAnimationFrame(rafDrag.current);
+        rafDrag.current = requestAnimationFrame(() => {
+          rafDrag.current = 0;
+          setFingerDrag(next);
+        });
+      };
 
       const onMoveReal = (ev) => {
         if (!gestureRef.current || gestureRef.current !== ctx) return;
         const d = Math.hypot(ev.clientX - ctx.sx, ev.clientY - ctx.sy);
-        if (d >= DRAG_THRESHOLD) setSuppressDicePointer(true);
+        if (!ctx.dragging) {
+          if (d < DRAG_THRESHOLD) {
+            setFingerDrag(null);
+            return;
+          }
+          ctx.dragging = true;
+        }
+        setSuppressDicePointer(true);
+        scheduleDragPos(ev.clientX, ev.clientY, true);
       };
 
       const onUp = (ev) => {
@@ -70,18 +114,48 @@ export default function FlatBoardPortrait({
         window.removeEventListener("pointerup", onUp);
         window.removeEventListener("pointercancel", onUp);
         gestureRef.current = null;
+        if (rafDrag.current) cancelAnimationFrame(rafDrag.current);
+        rafDrag.current = 0;
+        setFingerDrag(null);
         setSuppressDicePointer(false);
 
-        const under = resolveBoardPoint(ev.clientX, ev.clientY);
-        const moved = Math.hypot(ev.clientX - ctx.sx, ev.clientY - ctx.sy) >= DRAG_THRESHOLD;
+        const pointUnder = resolveBoardPoint(ev.clientX, ev.clientY);
+        const moved =
+          ctx.dragging || Math.hypot(ev.clientX - ctx.sx, ev.clientY - ctx.sy) >= DRAG_THRESHOLD;
 
         if (!moved) {
-          const tapPt = under !== undefined ? under : ctx.downPt;
+          const tapPt = pointUnder !== undefined ? pointUnder : ctx.downPt;
           if (tapPt !== undefined) onPointClick(tapPt);
-        } else if (ctx.canDragFrom && typeof onCheckerDragComplete === "function" && under !== undefined && under !== ctx.downPt) {
+          return;
+        }
+
+        if (!ctx.canDragFrom || typeof onCheckerDragComplete !== "function") return;
+
+        const overBO = isPointerOverPlayerBearOff(ev.clientX, ev.clientY);
+        const under = overBO ? -1 : pointUnder;
+
+        const b = boardRef.current;
+        const dice = diceRemainRef.current ?? [];
+        const legals = getLegalDests(b, ctx.downPt, dice);
+        const ok =
+          under !== undefined &&
+          legals.some((d0) => d0.to === under) &&
+          (under === -1 || under !== ctx.downPt);
+
+        if (ok) {
           onCheckerDragComplete(ctx.downPt, under);
+        } else {
+          const sz = ctx.checkerPx || readCheckerSizePxFromBoard();
+          animateCheckerDragRejectReturn({
+            fromPt: ctx.downPt,
+            clientX: ev.clientX,
+            clientY: ev.clientY,
+            sizePx: sz,
+          });
         }
       };
+
+      gestureRef.current = ctx;
 
       window.addEventListener("pointermove", onMoveReal, { passive: true });
       window.addEventListener("pointerup", onUp);
@@ -91,8 +165,14 @@ export default function FlatBoardPortrait({
   );
   const topRow = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12];
   const botRow = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
-  const isHL = (idx) => legalDests.some((d) => d.to === idx);
+  const isHL = (idx) => legalDests.some((d) => d.to === idx) || dragLegals.some((d) => d.to === idx);
   const isHit = (idx) => isHL(idx) && board[idx] === -1;
+  const isDragHoverPick = (idx) =>
+    Boolean(
+      fingerDrag?.showGhost &&
+        fingerDrag.hoverPt === idx &&
+        dragLegals.some((d) => d.to === idx)
+    );
 
   const MAX_SHOW = 5;
 
@@ -178,12 +258,18 @@ export default function FlatBoardPortrait({
     const hit = isHit(ptIdx);
     const dark = colIdx % 2 === 0;
     const wrongFlash = wrongFlashPoint === ptIdx;
+    const dp = isDragHoverPick(ptIdx);
+
+    const stackCount =
+      fingerDrag?.showGhost && fingerDrag.from === ptIdx && val > 0
+        ? Math.max(0, count - 1)
+        : count;
 
     const triFill = dark ? C.triDark : C.triLight;
     const hlFill = hit ? "rgba(220,40,40,0.45)" : "rgba(74,143,63,0.35)";
     const hlStroke = hit ? "#c94a3d" : "#4a8f3f";
 
-    const shown = Math.min(count, MAX_SHOW);
+    const shown = Math.min(stackCount, MAX_SHOW);
 
     const checkerGap = "calc(var(--checker-size) * 0.035)";
 
@@ -226,12 +312,24 @@ export default function FlatBoardPortrait({
               <polygon points="25,13 3,244 47,244" fill="none" stroke={hlStroke} strokeWidth={2} style={{ animation: "triPulse 1.3s ease-in-out infinite" }} />
             </>
           )}
+          {dp && isTop && (
+            <>
+              <polygon points="25,237 3,6 47,6" fill="rgba(45,119,62,0.38)" />
+              <polygon points="25,237 3,6 47,6" fill="none" stroke="#1f5f2a" strokeWidth={3} />
+            </>
+          )}
+          {dp && !isTop && (
+            <>
+              <polygon points="25,13 3,244 47,244" fill="rgba(45,119,62,0.38)" />
+              <polygon points="25,13 3,244 47,244" fill="none" stroke="#1f5f2a" strokeWidth={3} />
+            </>
+          )}
           {wrongFlash && (
             <rect x="0" y="0" width="50" height="250" fill="#c94a3d" opacity="0.5" style={{ animation: "wrongFlash 0.5s ease-out forwards" }} />
           )}
         </svg>
 
-        {count > 0 && (
+        {stackCount > 0 && (
           <div
             style={{
               position: "absolute",
@@ -278,7 +376,7 @@ export default function FlatBoardPortrait({
                 }}
               />
             ))}
-            {count > MAX_SHOW && (
+            {stackCount > MAX_SHOW && (
               <div
                 style={{
                   color: isW ? "#2C1A0A" : "#FDF6E3",
@@ -289,7 +387,7 @@ export default function FlatBoardPortrait({
                   flexShrink: 0,
                 }}
               >
-                +{count - MAX_SHOW}
+                +{stackCount - MAX_SHOW}
               </div>
             )}
           </div>
@@ -418,6 +516,32 @@ export default function FlatBoardPortrait({
           {stripBot}
         </div>
       </div>
+      {fingerDrag?.showGhost &&
+        typeof document !== "undefined" &&
+        createPortal(
+          (() => {
+            const sz = Math.round(fingerDrag.sizePx || readCheckerSizePxFromBoard());
+            const raw = board[fingerDrag.from] || 0;
+            const isW = raw > 0;
+            return (
+              <div
+                data-checker-drag-ghost=""
+                style={{
+                  position: "fixed",
+                  left: 0,
+                  top: 0,
+                  pointerEvents: "none",
+                  touchAction: "none",
+                  zIndex: 10050,
+                  transform: `translate3d(${fingerDrag.x - sz / 2}px, ${fingerDrag.y - sz / 2}px, 0)`,
+                  filter: "drop-shadow(0 3px 6px rgba(0,0,0,0.35))",
+                  ...checkerDragGhostStylePx(sz, isW, selected === fingerDrag.from),
+                }}
+              />
+            );
+          })(),
+          document.body
+        )}
     </div>
   );
 }
