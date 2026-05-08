@@ -400,14 +400,12 @@ export default function FlatBoard({
               style={{
                 position: "absolute",
                 top: "50%",
+                left: "50%",
+                right: "auto",
+                transform: "translate(-50%, -50%)",
                 display: "flex",
                 alignItems: "center",
                 gap: "calc(var(--dice-face) * 0.22)",
-                transition:
-                  "left 0.48s cubic-bezier(0.33, 1, 0.68, 1), right 0.48s cubic-bezier(0.33, 1, 0.68, 1), transform 0.48s cubic-bezier(0.33, 1, 0.68, 1)",
-                ...(diceIntroRolling
-                  ? { left: "50%", right: "auto", transform: "translate(-50%, -50%)" }
-                  : { right: "18%", left: "auto", transform: "translateY(-50%)" }),
               }}
             >
               <div style={{ width: "var(--dice-face)", height: "var(--dice-face)" }}>

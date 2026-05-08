@@ -61,7 +61,7 @@ export default function Die({
     if (rolling) {
       const tick = window.setInterval(() => {
         setShowFace(1 + Math.floor(Math.random() * 6));
-      }, 72);
+      }, 105);
       return () => window.clearInterval(tick);
     }
     setShowFace(Math.min(6, Math.max(1, value || 1)));
@@ -92,15 +92,17 @@ export default function Die({
           borderRadius,
           border: `2px solid ${used ? "#A09060" : "#8B6010"}`,
           boxShadow: used ? "none" : "0 3px 8px rgba(0,0,0,0.25),inset 0 1px 0 rgba(255,255,255,0.9)",
-          animation: rolling ? "dieRolling 620ms linear infinite" : "none",
+          transformOrigin: "50% 50%",
+          willChange: rolling ? "transform" : "auto",
+          animation: rolling ? "dieRolling 720ms ease-in-out infinite" : "none",
         }}
       >
         {rolling && (
           <style>{`
+            /* 0% / 100% match so loops are seamless; no scale jitter to avoid popping */
             @keyframes dieRolling {
-              0% { transform: rotate(-8deg) scale(1.02); }
-              50% { transform: rotate(8deg) scale(1.08); }
-              100% { transform: rotate(-8deg) scale(1.02); }
+              0%, 100% { transform: rotate(-2.5deg) translateY(0); }
+              50% { transform: rotate(2.5deg) translateY(-0.5px); }
             }
           `}</style>
         )}
