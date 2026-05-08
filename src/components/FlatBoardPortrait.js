@@ -1,7 +1,23 @@
+import { useCallback, useRef, useState } from "react";
 import { C } from "../constants/palette";
 import Die from "./Die";
 
 /** Portrait phone: same indices as FlatBoard; vertical bar, tall triangles (not a rotated board). */
+const DRAG_THRESHOLD = 14;
+
+function resolveBoardPoint(clientX, clientY) {
+  if (typeof document === "undefined") return undefined;
+  const stack = document.elementsFromPoint(clientX, clientY);
+  for (let i = 0; i < stack.length; i++) {
+    const cell = stack[i].closest?.("[data-board-point]");
+    if (cell?.hasAttribute?.("data-board-point")) {
+      const n = parseInt(cell.getAttribute("data-board-point"), 10);
+      if (!Number.isNaN(n)) return n;
+    }
+  }
+  return undefined;
+}
+
 const portraitBoardVarsCss = `
   [data-flat-board-portrait-root]{
     height:100%;
@@ -24,7 +40,58 @@ export default function FlatBoardPortrait({
   dice = [],
   diceUsed = [],
   wrongFlashPoint = null,
+  onCheckerDragComplete,
+  interactionLocked = false,
+  diceIntroRolling = false,
 }) {
+  const [suppressDicePointer, setSuppressDicePointer] = useState(false);
+  const gestureRef = useRef(null);
+
+  const handlePtDown = useCallback(
+    (e, ptIdx) => {
+      if (interactionLocked || e.button !== 0) return;
+      if (gestureRef.current) return;
+
+      const downVal = board[ptIdx] || 0;
+      const canDragFrom = typeof onCheckerDragComplete === "function" && downVal > 0;
+
+      const ctx = { downPt: ptIdx, sx: e.clientX, sy: e.clientY, canDragFrom };
+      gestureRef.current = ctx;
+
+      const onMoveReal = (ev) => {
+        if (!gestureRef.current || gestureRef.current !== ctx) return;
+        const d = Math.hypot(ev.clientX - ctx.sx, ev.clientY - ctx.sy);
+        if (d >= DRAG_THRESHOLD) setSuppressDicePointer(true);
+      };
+
+      const onUp = (ev) => {
+        if (gestureRef.current !== ctx) return;
+        window.removeEventListener("pointermove", onMoveReal);
+        window.removeEventListener("pointerup", onUp);
+        window.removeEventListener("pointercancel", onUp);
+        gestureRef.current = null;
+        setSuppressDicePointer(false);
+
+        const under = resolveBoardPoint(ev.clientX, ev.clientY);
+        const moved = Math.hypot(ev.clientX - ctx.sx, ev.clientY - ctx.sy) >= DRAG_THRESHOLD;
+
+        if (!moved) {
+          const tapPt = under !== undefined ? under : ctx.downPt;
+          if (tapPt !== undefined) onPointClick(tapPt);
+        } else if (ctx.canDragFrom && typeof onCheckerDragComplete === "function" && under !== undefined && under !== ctx.downPt) {
+          onCheckerDragComplete(ctx.downPt, under);
+        }
+      };
+
+      window.addEventListener("pointermove", onMoveReal, { passive: true });
+      window.addEventListener("pointerup", onUp);
+      window.addEventListener("pointercancel", onUp);
+      try {
+        e.currentTarget.setPointerCapture?.(e.pointerId);
+      } catch (_) {}
+    },
+    [board, interactionLocked, onCheckerDragComplete, onPointClick]
+  );
   const topRow = [23, 22, 21, 20, 19, 18, 17, 16, 15, 14, 13, 12];
   const botRow = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11];
   const isHL = (idx) => legalDests.some((d) => d.to === idx);
@@ -126,7 +193,8 @@ export default function FlatBoardPortrait({
     return (
       <div
         key={ptIdx}
-        onClick={() => onPointClick(ptIdx)}
+        data-board-point={String(ptIdx)}
+        onPointerDown={(e) => handlePtDown(e, ptIdx)}
         style={{
           flex: 1,
           position: "relative",
@@ -134,6 +202,7 @@ export default function FlatBoardPortrait({
           cursor: val > 0 || hl ? "pointer" : "default",
           minWidth: 0,
           overflow: "hidden",
+          touchAction: "manipulation",
         }}
       >
         <svg
@@ -299,6 +368,7 @@ export default function FlatBoardPortrait({
 
         <div
           role="presentation"
+          data-board-dice-strip
           style={{
             height: "var(--dice-strip-h)",
             minHeight: "var(--dice-strip-h)",
@@ -309,6 +379,7 @@ export default function FlatBoardPortrait({
             justifyContent: "center",
             borderTop: "1px solid rgba(42,26,14,0.15)",
             borderBottom: "1px solid rgba(42,26,14,0.15)",
+            pointerEvents: suppressDicePointer ? "none" : "auto",
           }}
         >
           <div
@@ -326,19 +397,22 @@ export default function FlatBoardPortrait({
             <div
               style={{
                 position: "absolute",
-                left: "20%",
                 top: "50%",
-                transform: "translateY(-50%)",
                 display: "flex",
                 alignItems: "center",
                 gap: "calc(var(--dice-face) * 0.22)",
+                transition:
+                  "left 0.48s cubic-bezier(0.33, 1, 0.68, 1), right 0.48s cubic-bezier(0.33, 1, 0.68, 1), transform 0.48s cubic-bezier(0.33, 1, 0.68, 1)",
+                ...(diceIntroRolling
+                  ? { left: "50%", right: "auto", transform: "translate(-50%, -50%)" }
+                  : { left: "20%", right: "auto", transform: "translateY(-50%)" }),
               }}
             >
               <div style={{ width: "var(--dice-face)", height: "var(--dice-face)" }}>
-                <Die value={dice[0]} size="100%" used={diceUsed[0]} />
+                <Die value={dice[0]} size="100%" used={diceUsed[0]} rolling={diceIntroRolling} slotIndex={0} />
               </div>
               <div style={{ width: "var(--dice-face)", height: "var(--dice-face)" }}>
-                <Die value={dice[1]} size="100%" used={diceUsed[1]} />
+                <Die value={dice[1]} size="100%" used={diceUsed[1]} rolling={diceIntroRolling} slotIndex={1} />
               </div>
             </div>
           )}

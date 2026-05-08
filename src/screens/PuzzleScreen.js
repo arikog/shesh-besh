@@ -11,10 +11,13 @@ import PashaAlert from "../components/PashaAlert";
 export default function PuzzleScreen(props) {
   const {
     setScreen, handleHint, iq, streak, accuracy, puzzleIdx, label, puzzle, currentPct, deltaPct,
-    liveBoard, movesDone, resultBoard, selected, legalDests, handlePointClick, handleBearOff, borneOff, diceUsedFlags, wrongFlash,
+    liveBoard, movesDone, resultBoard, selected, legalDests, handlePointClick, handleBearOff, borneOff,     diceUsedFlags, wrongFlash,
     canBearOffFromState, phase, popupOpen, setPopupOpen, setPhase, isCorrect, handleNextPuzzle, handleRetry, attempts,
     iqDelta, resultIqDelta, onRecordPuzzleAttempt,
     sfxMuted, toggleSfxMuted,
+    diceIntroRolling = false,
+    onCheckerDragComplete,
+    interactionLocked = false,
   } = props;
   const recordedResultRef = useRef("");
   const [narrowPortraitBoard, setNarrowPortraitBoard] = useState(false);
@@ -353,6 +356,9 @@ export default function PuzzleScreen(props) {
                   selected={selected}
                   legalDests={legalDests}
                   onPointClick={handlePointClick}
+                  onCheckerDragComplete={onCheckerDragComplete}
+                  interactionLocked={interactionLocked}
+                  diceIntroRolling={diceIntroRolling}
                   dice={[puzzle.dice[0], puzzle.dice[1]]}
                   diceUsed={diceUsedFlags}
                   wrongFlashPoint={wrongFlash}
@@ -363,6 +369,9 @@ export default function PuzzleScreen(props) {
                   selected={selected}
                   legalDests={legalDests}
                   onPointClick={handlePointClick}
+                  onCheckerDragComplete={onCheckerDragComplete}
+                  interactionLocked={interactionLocked}
+                  diceIntroRolling={diceIntroRolling}
                   dice={[puzzle.dice[0], puzzle.dice[1]]}
                   diceUsed={diceUsedFlags}
                   wrongFlashPoint={wrongFlash}
@@ -462,7 +471,10 @@ export default function PuzzleScreen(props) {
 
       {/* Floating Re-open button — shown when popup was dismissed mid-result */}
       {phase==="result" && !popupOpen && (
-        <PashaAlert onClick={()=>setPopupOpen(true)} isCorrect={isCorrect} />
+        <PashaAlert
+          onClick={isCorrect ? () => setPopupOpen(true) : handleRetry}
+          isCorrect={isCorrect}
+        />
       )}
 
       <style>{`
@@ -771,26 +783,44 @@ export default function PuzzleScreen(props) {
             <div style={{display:"flex",alignItems:"center",gap:12,marginBottom:14}}>
               <span style={{fontSize:32}}>❌</span>
               <div style={{flex:1}}>
-                <div style={{color:C.red,fontSize:20,fontWeight:800,fontFamily:"Georgia,serif"}}>
+                <div style={{color:C.red,fontSize:22,fontWeight:800,fontFamily:"Georgia,serif"}}>
                   Not the best move
                 </div>
-                <div style={{color:C.textSoft,fontSize:11,marginTop:2,letterSpacing:0.5}}>
-                  Win probability dropped by {Math.round(Math.abs(deltaPct))}%
+                <div style={{color:C.textSoft,fontSize:11,marginTop:2,letterSpacing:0.5}}>{puzzle.concept}</div>
+              </div>
+              <div style={{
+                background:"rgba(183,28,28,0.1)", border:"1px solid rgba(183,28,28,0.38)",
+                borderRadius:8, padding:"6px 12px", textAlign:"center",
+              }}>
+                <div style={{color:C.red,fontSize:16,fontWeight:800}}>{resultIqDelta}</div>
+                <div style={{color:C.textSoft,fontSize:9,letterSpacing:1}}>IQ</div>
+              </div>
+            </div>
+
+            <div style={{
+              background:"rgba(183,28,28,0.07)",
+              border:"1px solid rgba(183,28,28,0.25)",
+              borderRadius:10, padding:"12px 14px", marginBottom:16,
+              display:"flex", alignItems:"center", justifyContent:"space-between",
+            }}>
+              <div>
+                <div style={{color:C.textSoft,fontSize:10,fontWeight:700,letterSpacing:1.5,marginBottom:2}}>YOUR WIN PROBABILITY</div>
+                <div style={{color:C.red,fontSize:22,fontWeight:800}}>{Math.round(displayedYourWinPct)}%</div>
+                <div style={{color:C.textSoft,fontSize:11,marginTop:4}}>
+                  ~{Math.round(Math.abs(deltaPct))}% below your start
                 </div>
+              </div>
+              <div style={{
+                color:C.red, fontSize:15, fontWeight:800,
+                background:"rgba(183,28,28,0.15)", padding:"6px 12px", borderRadius:8,
+              }}>
+                BEST {Math.round(bestWinPct)}%
               </div>
             </div>
 
             <p style={{color:C.textMid,fontSize:13,lineHeight:1.7,margin:"0 0 18px",fontFamily:"Georgia,serif",fontStyle:"italic"}}>
-              Try again — the solution is still there to find. Think about what <em>structural</em> advantage you can create with these dice.
+              {puzzle.bestExplanation}
             </p>
-            <div style={{
-              background:"rgba(183,28,28,0.07)",
-              border:"1px solid rgba(183,28,28,0.22)",
-              borderRadius:10, padding:"10px 12px", marginBottom:14,
-              color:C.textMid, fontSize:12, lineHeight:1.5,
-            }}>
-              Your line: <strong>{Math.round(displayedYourWinPct)}%</strong> · Best line: <strong>{Math.round(bestWinPct)}%</strong>
-            </div>
 
             <div style={{display:"flex",gap:10}}>
               <button onClick={handleNextPuzzle} style={{

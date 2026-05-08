@@ -48,22 +48,34 @@ export default function SheshBesh() {
   const [history, setHistory] = useState([]);
   const [sfxMuted, setSfxMuted] = useState(getInitialSfxMuted);
   const [showIntroSplash, setShowIntroSplash] = useState(true);
+  const [diceIntroRolling, setDiceIntroRolling] = useState(false);
 
   const puzzle  = PUZZLES[puzzleIdx%PUZZLES.length];
   const label   = diceLabel(puzzle.dice[0],puzzle.dice[1]);
   const iqDelta = puzzle.difficulty==="Advanced"?18:puzzle.difficulty==="Intermediate"?12:8;
 
-  /** Roll dice SFX whenever puzzle view gains focus or puzzle index advances */
+  /** Roll dice SFX + intro animation whenever puzzle view gains focus or puzzle index advances */
   const puzzleNavRef = useRef({ screen: undefined, puzzleIdx: undefined });
+  const diceIntroTimerRef = useRef(null);
+  const triggerDiceIntro = useCallback(() => {
+    setDiceIntroRolling(true);
+    if (diceIntroTimerRef.current) window.clearTimeout(diceIntroTimerRef.current);
+    diceIntroTimerRef.current = window.setTimeout(() => {
+      setDiceIntroRolling(false);
+      diceIntroTimerRef.current = null;
+    }, 920);
+  }, []);
+
   useEffect(() => {
     const wasPuzzle = puzzleNavRef.current.screen === "puzzle";
     const prevIdx = puzzleNavRef.current.puzzleIdx;
     const nowPuzzle = screen === "puzzle";
     if (nowPuzzle && (!wasPuzzle || puzzleIdx !== prevIdx)) {
       playDiceRoll();
+      triggerDiceIntro();
     }
     puzzleNavRef.current = { screen, puzzleIdx };
-  }, [screen, puzzleIdx]);
+  }, [screen, puzzleIdx, triggerDiceIntro]);
 
   function initPuzzle(p) {
     const dice=p.dice[0]===p.dice[1]?[p.dice[0],p.dice[0],p.dice[0],p.dice[0]]:[...p.dice];
@@ -159,6 +171,13 @@ export default function SheshBesh() {
     tryMove(selected, -1, hl.die);
   }
 
+  function handleCheckerDragComplete(from, to) {
+    if (phase !== "playing" || !liveBoard) return;
+    const legal = getLegalDests(liveBoard, from, diceLeft);
+    const hit = legal.find((d) => d.to === to);
+    if (hit) tryMove(from, to, hit.die);
+  }
+
   function tryMove(from, to, die){
     const attempted = [...movesDone, {from, to}];
     const valid = isMovePrefixValid(attempted, puzzle.bestMoves);
@@ -226,11 +245,14 @@ export default function SheshBesh() {
     setMovesDone([]);
     setBorneOff(0);
     setPhase("playing");
+    setAttempts(0);
+    setWrongFlash(null);
     setCurrentPct(basePct);
     setPopupOpen(false);
     setResultBoard(null);
     setResultIqDelta(0);
     playDiceRoll();
+    triggerDiceIntro();
   }
 
   function handleNextPuzzle(){
@@ -337,6 +359,9 @@ export default function SheshBesh() {
       iqDelta={iqDelta}
       sfxMuted={sfxMuted}
       toggleSfxMuted={toggleSfxMuted}
+      diceIntroRolling={diceIntroRolling}
+      onCheckerDragComplete={handleCheckerDragComplete}
+      interactionLocked={phase !== "playing"}
     />
   );
 }
