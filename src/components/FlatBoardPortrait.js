@@ -3,7 +3,7 @@ import { C } from "../constants/palette";
 import Die from "./Die";
 
 /** Portrait phone: same indices as FlatBoard; vertical bar, tall triangles (not a rotated board). */
-const DRAG_THRESHOLD = 14;
+const DRAG_THRESHOLD = 6;
 
 function resolveBoardPoint(clientX, clientY) {
   if (typeof document === "undefined") return undefined;
@@ -86,9 +86,6 @@ export default function FlatBoardPortrait({
       window.addEventListener("pointermove", onMoveReal, { passive: true });
       window.addEventListener("pointerup", onUp);
       window.addEventListener("pointercancel", onUp);
-      try {
-        e.currentTarget.setPointerCapture?.(e.pointerId);
-      } catch (_) {}
     },
     [board, interactionLocked, onCheckerDragComplete, onPointClick]
   );

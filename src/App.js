@@ -3,6 +3,7 @@ import { diceLabel } from "./constants/dice";
 import { PUZZLES } from "./data/puzzles";
 import { evaluatePosition } from "./engine/evaluator";
 import { applyMove, getLegalDests } from "./game/moveEngine";
+import { animateCheckerFlightBetweenPoints } from "./game/checkerFlight";
 import HomeScreen from "./screens/HomeScreen";
 import LearnScreen from "./screens/LearnScreen";
 import PuzzleScreen from "./screens/PuzzleScreen";
@@ -49,6 +50,7 @@ export default function SheshBesh() {
   const [sfxMuted, setSfxMuted] = useState(getInitialSfxMuted);
   const [showIntroSplash, setShowIntroSplash] = useState(true);
   const [diceIntroRolling, setDiceIntroRolling] = useState(false);
+  const moveInFlightRef = useRef(false);
 
   const puzzle  = PUZZLES[puzzleIdx%PUZZLES.length];
   const label   = diceLabel(puzzle.dice[0],puzzle.dice[1]);
@@ -88,6 +90,8 @@ export default function SheshBesh() {
     setPhase("playing");
     setAttempts(0);
     setWrongFlash(null);
+    moveInFlightRef.current = false;
+    document.querySelectorAll("[data-checker-flight]").forEach((n) => n.remove());
     setPopupOpen(false);
     setResultBoard(null);
     setResultIqDelta(0);
@@ -149,7 +153,7 @@ export default function SheshBesh() {
   }
 
   function handlePointClick(ptIdx) {
-    if (phase!=="playing"||!liveBoard) return;
+    if (phase!=="playing"||!liveBoard || moveInFlightRef.current) return;
     const val=liveBoard[ptIdx];
 
     if (selected===null) {
@@ -165,14 +169,14 @@ export default function SheshBesh() {
   }
 
   function handleBearOff() {
-    if (phase !== 'playing' || !liveBoard || selected === null) return;
+    if (phase !== 'playing' || !liveBoard || selected === null || moveInFlightRef.current) return;
     const hl = legalDests.find(d => d.to === -1);
     if (!hl) return;
     tryMove(selected, -1, hl.die);
   }
 
   function handleCheckerDragComplete(from, to) {
-    if (phase !== "playing" || !liveBoard) return;
+    if (phase !== "playing" || !liveBoard || moveInFlightRef.current) return;
     const legal = getLegalDests(liveBoard, from, diceLeft);
     const hit = legal.find((d) => d.to === to);
     if (hit) tryMove(from, to, hit.die);
@@ -203,39 +207,60 @@ export default function SheshBesh() {
       return;
     }
 
-    const nb = applyMove(liveBoard, from, to);
-    const nd = [...diceLeft]; nd.splice(nd.indexOf(die),1);
-    setLiveBoard(nb); setDiceLeft(nd);
-    setMovesDone(attempted);
-    if (to===-1) setBorneOff(n=>n+1);
-    playCheckerMove();
-    setSelected(null); setLegalDests([]);
+    if (moveInFlightRef.current) return;
 
-    if (attempted.length === puzzle.bestMoves.length) {
-      const finalPct = evaluatePosition(nb, puzzle.dice, "white").winPct;
-      const bestBoard = puzzle.bestMoves.reduce(
-        (acc, move) => applyMove(acc, move.from, move.to),
-        [...puzzle.board]
-      );
-      const bestEvalPct = evaluatePosition(bestBoard, puzzle.dice, "white").winPct;
-      const fallbackBestPct = Number.isFinite(puzzle.bestWinPct) ? puzzle.bestWinPct : bestEvalPct;
-      const trustedBestPct = Number.isFinite(bestEvalPct) && bestEvalPct >= 0 && bestEvalPct <= 100
-        ? bestEvalPct
-        : fallbackBestPct;
-      // Correct solution should not display as worse than the puzzle's baseline.
-      const resolvedCorrectPct = Math.max(basePct, trustedBestPct, finalPct);
-      setResultBoard(nb);
-      setCurrentPct(resolvedCorrectPct);
-      setResultIqDelta(attempts === 0 ? iqDelta : Math.round(iqDelta / 2));
-      setIsCorrect(true);
-      setTimeout(()=>{
-        setPopupOpen(true);
-        setPhase("result");
-      }, 900);
+    const nb = applyMove(liveBoard, from, to);
+    const nd = [...diceLeft];
+    nd.splice(nd.indexOf(die), 1);
+
+    const commitValidMove = () => {
+      moveInFlightRef.current = false;
+      setLiveBoard(nb);
+      setDiceLeft(nd);
+      setMovesDone(attempted);
+      if (to === -1) setBorneOff((n) => n + 1);
+      playCheckerMove();
+      setSelected(null);
+      setLegalDests([]);
+
+      if (attempted.length === puzzle.bestMoves.length) {
+        const finalPct = evaluatePosition(nb, puzzle.dice, "white").winPct;
+        const bestBoard = puzzle.bestMoves.reduce(
+          (acc, move) => applyMove(acc, move.from, move.to),
+          [...puzzle.board]
+        );
+        const bestEvalPct = evaluatePosition(bestBoard, puzzle.dice, "white").winPct;
+        const fallbackBestPct = Number.isFinite(puzzle.bestWinPct) ? puzzle.bestWinPct : bestEvalPct;
+        const trustedBestPct = Number.isFinite(bestEvalPct) && bestEvalPct >= 0 && bestEvalPct <= 100
+          ? bestEvalPct
+          : fallbackBestPct;
+        const resolvedCorrectPct = Math.max(basePct, trustedBestPct, finalPct);
+        setResultBoard(nb);
+        setCurrentPct(resolvedCorrectPct);
+        setResultIqDelta(attempts === 0 ? iqDelta : Math.round(iqDelta / 2));
+        setIsCorrect(true);
+        setTimeout(() => {
+          setPopupOpen(true);
+          setPhase("result");
+        }, 900);
+      }
+    };
+
+    if (to >= 0) {
+      moveInFlightRef.current = true;
+      setSelected(null);
+      setLegalDests([]);
+      animateCheckerFlightBetweenPoints(from, to).finally(() => {
+        commitValidMove();
+      });
+    } else {
+      commitValidMove();
     }
   }
 
   function handleRetry(){
+    moveInFlightRef.current = false;
+    document.querySelectorAll("[data-checker-flight]").forEach((n) => n.remove());
     const p = puzzle;
     const dice=p.dice[0]===p.dice[1]?[p.dice[0],p.dice[0],p.dice[0],p.dice[0]]:[...p.dice];
     setLiveBoard([...p.board]);
