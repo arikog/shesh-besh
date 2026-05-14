@@ -19,6 +19,7 @@ export default function PuzzleScreen(props) {
     diceIntroRolling = false,
     onCheckerDragComplete,
     interactionLocked = false,
+    pendingFlightFrom = null,
   } = props;
   const recordedResultRef = useRef("");
   const [narrowPortraitBoard, setNarrowPortraitBoard] = useState(false);
@@ -364,6 +365,7 @@ export default function PuzzleScreen(props) {
                   diceUsed={diceUsedFlags}
                   wrongFlashPoint={wrongFlash}
                   remainingDice={diceLeft}
+                  pendingFlightFrom={pendingFlightFrom}
                 />
               ) : (
                 <FlatBoard
@@ -378,6 +380,7 @@ export default function PuzzleScreen(props) {
                   diceUsed={diceUsedFlags}
                   wrongFlashPoint={wrongFlash}
                   remainingDice={diceLeft}
+                  pendingFlightFrom={pendingFlightFrom}
                 />
               )}
             </div>

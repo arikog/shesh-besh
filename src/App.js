@@ -51,6 +51,9 @@ export default function SheshBesh() {
   const [showIntroSplash, setShowIntroSplash] = useState(true);
   const [diceIntroRolling, setDiceIntroRolling] = useState(false);
   const moveInFlightRef = useRef(false);
+  /** Source point of an in-flight checker animation; FlatBoard uses this to
+   *  keep the source stack at count-1 throughout the flight (no visual snap). */
+  const [pendingFlightFrom, setPendingFlightFrom] = useState(null);
 
   const puzzle  = PUZZLES[puzzleIdx%PUZZLES.length];
   const label   = diceLabel(puzzle.dice[0],puzzle.dice[1]);
@@ -91,6 +94,7 @@ export default function SheshBesh() {
     setAttempts(0);
     setWrongFlash(null);
     moveInFlightRef.current = false;
+    setPendingFlightFrom(null);
     document.querySelectorAll("[data-checker-flight]").forEach((n) => n.remove());
     setPopupOpen(false);
     setResultBoard(null);
@@ -175,14 +179,14 @@ export default function SheshBesh() {
     tryMove(selected, -1, hl.die);
   }
 
-  function handleCheckerDragComplete(from, to) {
+  function handleCheckerDragComplete(from, to, dropPos) {
     if (phase !== "playing" || !liveBoard || moveInFlightRef.current) return;
     const legal = getLegalDests(liveBoard, from, diceLeft);
     const hit = legal.find((d) => d.to === to);
-    if (hit) tryMove(from, to, hit.die);
+    if (hit) tryMove(from, to, hit.die, dropPos);
   }
 
-  function tryMove(from, to, die){
+  function tryMove(from, to, die, dropPos){
     const attempted = [...movesDone, {from, to}];
     const valid = isMovePrefixValid(attempted, puzzle.bestMoves);
 
@@ -250,8 +254,20 @@ export default function SheshBesh() {
       moveInFlightRef.current = true;
       setSelected(null);
       setLegalDests([]);
-      animateCheckerFlightBetweenPoints(from, to).finally(() => {
-        commitValidMove();
+      // Keep the source point's stack visually at count-1 until the flight
+      // lands, so the chip never appears to teleport back to source.
+      setPendingFlightFrom(from);
+      animateCheckerFlightBetweenPoints(from, to, {
+        startClientX: dropPos?.clientX,
+        startClientY: dropPos?.clientY,
+        isWhite: liveBoard[from] > 0,
+        onLand: () => {
+          // Commit board state on the same frame the ghost is at the landing
+          // spot — the real destination checker mounts under the ghost before
+          // the ghost fades, giving a continuous visual.
+          setPendingFlightFrom(null);
+          commitValidMove();
+        },
       });
     } else {
       commitValidMove();
@@ -260,6 +276,7 @@ export default function SheshBesh() {
 
   function handleRetry(){
     moveInFlightRef.current = false;
+    setPendingFlightFrom(null);
     document.querySelectorAll("[data-checker-flight]").forEach((n) => n.remove());
     const p = puzzle;
     const dice=p.dice[0]===p.dice[1]?[p.dice[0],p.dice[0],p.dice[0],p.dice[0]]:[...p.dice];
@@ -388,6 +405,7 @@ export default function SheshBesh() {
       diceIntroRolling={diceIntroRolling}
       onCheckerDragComplete={handleCheckerDragComplete}
       interactionLocked={phase !== "playing"}
+      pendingFlightFrom={pendingFlightFrom}
     />
   );
 }

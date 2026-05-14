@@ -34,12 +34,17 @@ export default function FlatBoard({
   dice = [],
   diceUsed = [],
   wrongFlashPoint = null,
-  /** Tap-to-move still works; optional drag checker from point → point when set */
+  /** Tap-to-move still works; optional drag checker from point → point when set.
+   *  Called as (from, to, { clientX, clientY }) so flight animations can start
+   *  at the finger drop position instead of snapping back to the source stack. */
   onCheckerDragComplete,
   interactionLocked = false,
   /** Remaining dice pips — used while dragging for legal-target highlights */
   remainingDice = [],
   diceIntroRolling = false,
+  /** While a flight is in progress, the host sets this to the source point so we
+   *  keep showing count-1 there until the destination checker is committed. */
+  pendingFlightFrom = null,
 }) {
   const boardRef = useRef(board);
   const diceRemainRef = useRef(remainingDice);
@@ -144,14 +149,21 @@ export default function FlatBoard({
           (under === -1 || under !== ctx.downPt);
 
         if (ok) {
-          onCheckerDragComplete(ctx.downPt, under);
+          // Pass the drop position so the host can hand the drag ghost off to a
+          // flight that starts at the finger — no visual snap back to source.
+          onCheckerDragComplete(ctx.downPt, under, {
+            clientX: ev.clientX,
+            clientY: ev.clientY,
+          });
         } else {
           const sz = ctx.checkerPx || readCheckerSizePxFromBoard();
+          const raw = boardRef.current?.[ctx.downPt] || 0;
           animateCheckerDragRejectReturn({
             fromPt: ctx.downPt,
             clientX: ev.clientX,
             clientY: ev.clientY,
             sizePx: sz,
+            isWhite: raw > 0,
           });
         }
       };
@@ -261,10 +273,12 @@ export default function FlatBoard({
     const wrongFlash = wrongFlashPoint === ptIdx;
     const dp = isDragHoverPick(ptIdx);
 
-    const stackCount =
-      fingerDrag?.showGhost && fingerDrag.from === ptIdx && val > 0
-        ? Math.max(0, count - 1)
-        : count;
+    // Hide the topmost source checker while it's mid-drag OR mid-flight.
+    // Keeps the visual continuous from finger drop → flight landing.
+    const hideOneFromSource =
+      (fingerDrag?.showGhost && fingerDrag.from === ptIdx && val > 0) ||
+      (pendingFlightFrom === ptIdx && val > 0);
+    const stackCount = hideOneFromSource ? Math.max(0, count - 1) : count;
 
     const shown = Math.min(stackCount, MAX_SHOW);
 

@@ -35,10 +35,15 @@ export default function FlatBoardPortrait({
   dice = [],
   diceUsed = [],
   wrongFlashPoint = null,
+  /** Called as (from, to, { clientX, clientY }) so flight animations can start
+   *  at the finger drop position instead of snapping back to the source stack. */
   onCheckerDragComplete,
   interactionLocked = false,
   remainingDice = [],
   diceIntroRolling = false,
+  /** While a flight is in progress, the host sets this to the source point so we
+   *  keep showing count-1 there until the destination checker is committed. */
+  pendingFlightFrom = null,
 }) {
   const boardRef = useRef(board);
   const diceRemainRef = useRef(remainingDice);
@@ -143,14 +148,19 @@ export default function FlatBoardPortrait({
           (under === -1 || under !== ctx.downPt);
 
         if (ok) {
-          onCheckerDragComplete(ctx.downPt, under);
+          onCheckerDragComplete(ctx.downPt, under, {
+            clientX: ev.clientX,
+            clientY: ev.clientY,
+          });
         } else {
           const sz = ctx.checkerPx || readCheckerSizePxFromBoard();
+          const raw = boardRef.current?.[ctx.downPt] || 0;
           animateCheckerDragRejectReturn({
             fromPt: ctx.downPt,
             clientX: ev.clientX,
             clientY: ev.clientY,
             sizePx: sz,
+            isWhite: raw > 0,
           });
         }
       };
@@ -260,10 +270,12 @@ export default function FlatBoardPortrait({
     const wrongFlash = wrongFlashPoint === ptIdx;
     const dp = isDragHoverPick(ptIdx);
 
-    const stackCount =
-      fingerDrag?.showGhost && fingerDrag.from === ptIdx && val > 0
-        ? Math.max(0, count - 1)
-        : count;
+    // Hide the topmost source checker while it's mid-drag OR mid-flight,
+    // so the visual stays continuous from finger drop → flight landing.
+    const hideOneFromSource =
+      (fingerDrag?.showGhost && fingerDrag.from === ptIdx && val > 0) ||
+      (pendingFlightFrom === ptIdx && val > 0);
+    const stackCount = hideOneFromSource ? Math.max(0, count - 1) : count;
 
     const triFill = dark ? C.triDark : C.triLight;
     const hlFill = hit ? "rgba(220,40,40,0.45)" : "rgba(74,143,63,0.35)";
